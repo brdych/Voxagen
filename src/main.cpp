@@ -1,8 +1,8 @@
-#include <iostream>
-using namespace std;
+#include <GL/glut.h>
 
+main(int argc, char **argv)
+{
+  
 
-int main() {
-  cout << "Hello World" << endl;
-
+  return 0;
 }

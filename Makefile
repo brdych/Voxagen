@@ -1,4 +1,4 @@
-CC := g++ # This is the main compiler
+CC := g++
 SRCDIR := src
 BUILDDIR := build
 TARGET := bin/voxagen
