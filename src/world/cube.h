@@ -1,13 +1,11 @@
 #ifndef CUBE_H
 #define CUBE_H
 
-/**
- * @todo write docs
- */
-class Cube
-{
+class Cube {
 public:
-
+    
+    static const int CUBE_SIZE = 1;
+    
     Cube();
 
     ~Cube();

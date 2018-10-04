@@ -31,5 +31,13 @@
 *.out
 *.app
 
+# Executable
+bin/Voxagen
+build/Voxagen
+
+# Netbeans
+nbproject/*
+
 # KDevelop File
 *.kdev4
+/build/

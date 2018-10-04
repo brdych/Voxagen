@@ -1,12 +1,10 @@
-#include "world/cube.h"
+#include "cube.h"
 
-Cube::Cube()
-{
+Cube::Cube() {
 
 }
 
-Cube::~Cube()
-{
+Cube::~Cube() {
 
 }
 
@@ -15,5 +13,5 @@ bool Cube::getActive() {
 }
 
 void Cube::setActive(bool active) {
-         _active = active;
+    _active = active;
 }
