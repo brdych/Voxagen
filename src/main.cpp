@@ -1,8 +1,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include "gui/imgui.h"
+#include "gui/imgui_impl_glfw.h"
+#include "gui/imgui_impl_opengl3.h"
+
 #include <iostream>
 #include <stdio.h>
-
 
 using namespace std;
 
@@ -12,6 +16,7 @@ using namespace std;
 int main(void) {
 
     cout << "Hello world!" << endl;
+    
 
     static const int WORLD_SIZE = 1;
     Chunk*** _chunks;
@@ -45,22 +50,64 @@ int main(void) {
         return -1;
     }
 
+    // Setup Dear ImGui binding
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+    // Setup style
+    ImGui::StyleColorsDark();
+    
+    bool program_exit = false;
+    bool show_demo_window = true;
+    ImVec4 clear_color = ImVec4(0.3f, 0.8f, 1.0f, 1.00f);
 
-    glViewport(0, 0, 800, 600);
-
-    while(!glfwWindowShouldClose(window)) {
+    while(!glfwWindowShouldClose(window)&&!program_exit) {
         
         // Input
+        glfwPollEvents();
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
+        static float f = 0.0f;
+        ImGui::Begin("Voxagen Control Panel");
+        ImGui::Text("Some Useful Info");
+        ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+        if (ImGui::Button("Exit Voxagen"))
+            program_exit = true;
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::End();
         
         // Rendering
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui::Render();
         
-        // Check events/swap the buffers
+        int display_w, display_h;
+        glfwMakeContextCurrent(window);
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
+        glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
     
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
     glfwTerminate();
     
     cout << "Goodbye world!" << endl;
