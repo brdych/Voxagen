@@ -1,7 +1,7 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include"cube.h"
+#include"cube.hpp"
 
 class Chunk {
 public:

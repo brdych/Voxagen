@@ -1,116 +1,160 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include "gui/imgui.h"
-#include "gui/imgui_impl_glfw.h"
-#include "gui/imgui_impl_opengl3.h"
-
 #include <iostream>
 #include <stdio.h>
 
 using namespace std;
 
+#include "gui/guimanager.hpp"
+#include "world/chunk.hpp"
+#include "utility/camera.hpp"
+#include "utility/loader.hpp"
 
-#include "world/chunk.h"
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow *window);
 
-int main(void) {
+// settings
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
 
+Loader* loader = new Loader();
+GLFWwindow* window = loader->loadGL(SCR_WIDTH, SCR_HEIGHT);
+GuiManager* gui = new GuiManager(window);
+Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+ImVec4 clear_color = ImVec4(0.3f, 0.8f, 1.0f, 1.00f);
+
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+bool program_exit = false;
+
+int main(void)
+{
     cout << "Hello world!" << endl;
-    
 
-    static const int WORLD_SIZE = 1;
-    Chunk*** _chunks;
-
-    _chunks = new Chunk**[WORLD_SIZE];
-    for (int i = 0; i < WORLD_SIZE; i++) {
-        _chunks[i] = new Chunk*[WORLD_SIZE];
-        for (int j = 0; j < WORLD_SIZE; j++) {
-            _chunks[i][j] = new Chunk[WORLD_SIZE];
-        }
-    }
-
-    //Initialize GLFW
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Voxagen", NULL, NULL);
-    if (window == NULL) {
-        cout << "Failed to create GLFW window" << endl;
-        glfwTerminate();
-        return -1;
-    }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
-    // Initialize GLAD
-    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-        cout << "Failed to initialize GLAD" << endl;
-        return -1;
-    }
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
+    };
 
-    // Setup Dear ImGui binding
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 130");
-    // Setup style
-    ImGui::StyleColorsDark();
-    
-    bool program_exit = false;
-    bool show_demo_window = true;
-    ImVec4 clear_color = ImVec4(0.3f, 0.8f, 1.0f, 1.00f);
+    GLuint vbo = 0;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), vertices, GL_STATIC_DRAW);
 
-    while(!glfwWindowShouldClose(window)&&!program_exit) {
-        
+    GLuint vao = 0;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+
+    const char* vertex_shader =
+    "#version 400\n"
+    "in vec3 vp;"
+    "void main() {"
+    "  gl_Position = vec4(vp, 1.0);"
+    "}";
+
+    const char* fragment_shader =
+    "#version 400\n"
+    "out vec4 frag_colour;"
+    "void main() {"
+    "  frag_colour = vec4(0.5, 0.0, 0.5, 1.0);"
+    "}";
+
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vertex_shader, NULL);
+    glCompileShader(vs);
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fragment_shader, NULL);
+    glCompileShader(fs);
+
+    GLuint shader_programme = glCreateProgram();
+    glAttachShader(shader_programme, fs);
+    glAttachShader(shader_programme, vs);
+    glLinkProgram(shader_programme);
+
+    while(!glfwWindowShouldClose(window)&&!program_exit)
+    {
         // Input
-        glfwPollEvents();
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+        processInput(window);
 
         // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-        static float f = 0.0f;
-        ImGui::Begin("Voxagen Control Panel");
-        ImGui::Text("Some Useful Info");
-        ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-        if (ImGui::Button("Exit Voxagen"))
-            program_exit = true;
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::End();
+        gui->drawControlPanel(&program_exit, &clear_color);
         
         // Rendering
-        ImGui::Render();
-        
         int display_w, display_h;
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(shader_programme);
+        glBindVertexArray(vao);
+        // draw points 0-3 from the currently bound VAO with current in-use shader
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
+        glfwPollEvents();
     }
-    
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    glfwDestroyWindow(window);
-    glfwTerminate();
-    
-    cout << "Goodbye world!" << endl;
 
+    cout << "Goodbye world!" << endl;
     return 0;
+}
+
+void processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera->ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera->ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera->ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera->ProcessKeyboard(RIGHT, deltaTime);
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+    camera->ProcessMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera->ProcessMouseScroll(yoffset);
 }
