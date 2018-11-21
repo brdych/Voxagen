@@ -24,7 +24,7 @@ GuiManager::~GuiManager() {
     ImGui::DestroyContext();
 }
 
-void GuiManager::drawControlPanel(bool* program_exit, ImVec4* clear_color) {
+void GuiManager::drawControlPanel(bool* program_exit, bool* culling, bool* z_buffer, bool* use_cube_color, ImVec4*cube_color, ImVec4* clear_color) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -35,9 +35,13 @@ void GuiManager::drawControlPanel(bool* program_exit, ImVec4* clear_color) {
     ImGui::Begin("Voxagen Control Panel");
     ImGui::Text("Some Useful Info");
     ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+    ImGui::Checkbox("GL Culling", culling);                 // Edit bools storing GL Culling
+    ImGui::Checkbox("GL Depth Buffer", z_buffer);           // Edit bools storing GL Z_Buffer
+    ImGui::Checkbox("Use Solid Cube Color", use_cube_color);// Edit bools storing Cube Color
 
     ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
     ImGui::ColorEdit3("clear color", (float*)clear_color);  // Edit 3 floats representing a color
+    ImGui::ColorEdit3("cube color", (float*)cube_color);    // Edit 3 floats representing a color
 
     if (ImGui::Button("Exit Voxagen")) {
         *program_exit = true;
