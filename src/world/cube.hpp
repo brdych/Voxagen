@@ -1,23 +1,16 @@
 #ifndef CUBE_H
 #define CUBE_H
 
+#include <glm/vec3.hpp>
+
 class Cube {
-public:
-    
-    static const int CUBE_SIZE = 1;
-    
+public:    
     Cube();
 
     ~Cube();
     
-    bool getActive();
-    
-    void setActive(bool active);
-    
-private:
-    
-    bool _active;
-
+    bool active;
+    glm::vec3 color;
 };
 
 #endif // CUBE_H

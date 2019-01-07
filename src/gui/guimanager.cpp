@@ -24,7 +24,7 @@ GuiManager::~GuiManager() {
     ImGui::DestroyContext();
 }
 
-void GuiManager::drawControlPanel(bool* program_exit, bool* culling, bool* z_buffer, bool* use_cube_color, ImVec4*cube_color, ImVec4* clear_color) {
+void GuiManager::drawControlPanel() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -33,18 +33,18 @@ void GuiManager::drawControlPanel(bool* program_exit, bool* culling, bool* z_buf
     }
     static float f = 0.0f;
     ImGui::Begin("Voxagen Control Panel");
-    ImGui::Text("Some Useful Info");
     ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-    ImGui::Checkbox("GL Culling", culling);                 // Edit bools storing GL Culling
-    ImGui::Checkbox("GL Depth Buffer", z_buffer);           // Edit bools storing GL Z_Buffer
-    ImGui::Checkbox("Use Solid Cube Color", use_cube_color);// Edit bools storing Cube Color
+    ImGui::Checkbox("GL Culling", &_settings->CULLING_ENABLED);                 // Edit bools storing GL Culling
+    ImGui::Checkbox("GL Depth Buffer", &_settings->Z_BUFFER_ENABLED);           // Edit bools storing GL Z_Buffer
+    ImGui::Checkbox("Wireframe", &_settings->USE_WIREFRAME);// Edit Wireframe bool
+    ImGui::ColorEdit3("clear color", (float*)_settings->CLEAR_COLOUR);  // Edit 3 floats representing a color
 
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)clear_color);  // Edit 3 floats representing a color
-    ImGui::ColorEdit3("cube color", (float*)cube_color);    // Edit 3 floats representing a color
+    if (ImGui::Button("Regenerate VoxelData")) {
+        _settings->REGEN_VOXELDATA = true;
+    }
 
     if (ImGui::Button("Exit Voxagen")) {
-        *program_exit = true;
+        _settings->PROGRAM_SHOULD_EXIT = true;
     }
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

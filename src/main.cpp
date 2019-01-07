@@ -9,6 +9,9 @@ using namespace std;
 #include "world/chunk.hpp"
 #include "utility/camera.hpp"
 #include "utility/loader.hpp"
+#include "utility/voxagensettings.hpp"
+#include "utility/shader.hpp"
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -16,135 +19,124 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
+
+VoxagenSettings* settings = VoxagenSettings::SettingsInstance();
 
 Loader* loader = new Loader();
 GLFWwindow* window = loader->loadGL(SCR_WIDTH, SCR_HEIGHT);
 GuiManager* gui = new GuiManager(window);
 Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
-ImVec4 clear_color = ImVec4(0.3f, 0.8f, 1.0f, 1.00f);
-ImVec4 cube_color = ImVec4(0.5f, 0.5f, 0.5f, 1.00f);
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
-bool program_exit = false;
 bool free_mouse = false;
 bool alt_pressed = false;
-bool culling = false;
-bool z_buffer = false;
-bool use_cube_color = false;
 
-bool update_color_buffer = false;
+const int chunk_size = 16;
+
+struct Voxel{
+    bool enabled;
+    glm::vec3 col;
+};
+
+Voxel voxeldata[chunk_size][chunk_size][chunk_size];
+
+bool RandomBool() {
+   return rand() > (RAND_MAX / 2);
+}
+
+float RandomFloat(float a, float b) {
+    return a + ((((float) rand()) / (float) RAND_MAX) * (b - a));
+}
+
+void generateVoxelData()
+{
+    cout <<"Creating random voxel data" << endl;
+    for(int x = 0; x < chunk_size; x++)
+    {
+        for(int y = 0; y < chunk_size; y++)
+        {
+            for(int z = 0; z < chunk_size; z++)
+            {
+                Voxel v;
+                v.enabled = RandomBool();
+                v.col = glm::vec3(RandomFloat(0,1),RandomFloat(0,1),RandomFloat(0,1));
+                voxeldata[x][y][z] = v;
+            }
+        }
+    }
+    cout <<"Voxel data created!" << endl;
+}
 
 int main(void)
 {
+    generateVoxelData();
     cout << "Hello world!" << endl;
-
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    //VAO
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
-    static const GLfloat g_vertex_buffer_data[] = {
-        -1.0f,-1.0f,-1.0f, // triangle 1 : begin
-        -1.0f,-1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f, // triangle 1 : end
-        1.0f, 1.0f,-1.0f, // triangle 2 : begin
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f,-1.0f, // triangle 2 : end
-        1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f,-1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f,-1.0f,
-        -1.0f, 1.0f,-1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f
+    static const GLfloat voxel_vertices[] = {
+        -0.5f,-0.5f,-0.5f, //BLB 0
+        -0.5f,-0.5f, 0.5f, //BLF 1
+         0.5f,-0.5f,-0.5f, //BRB 2
+         0.5f,-0.5f, 0.5f, //BRF 3
+        -0.5f, 0.5f,-0.5f, //TLB 4
+        -0.5f, 0.5f, 0.5f, //TLF 5
+         0.5f, 0.5f,-0.5f, //TRB 6
+         0.5f, 0.5f, 0.5f  //TRF 7
     };
 
-    static GLfloat g_solid_color_buffer_data[36*3];
+    static const GLuint voxel_indices[] = {
+        4,7,6,  //Top
+        4,5,7,
+        1,2,3,  //Bottom
+        1,0,2,
+        7,2,6,  //Right
+        7,3,2,
+        4,1,5,  //Left
+        4,0,1,
+        6,0,4,  //Back
+        6,2,0,
+        5,3,7,  //Front
+        5,1,3
+    };
 
+    //VAO
+    GLuint vertexarray;
+    glGenVertexArrays(1, &vertexarray);
+    glBindVertexArray(vertexarray);
+    //VBO
     GLuint vertexbuffer;
-    // Generate 1 buffer, put the resulting identifier in vertexbuffer
     glGenBuffers(1, &vertexbuffer);
-    // The following commands will talk about our 'vertexbuffer' buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(voxel_vertices), voxel_vertices, GL_STATIC_DRAW);
+    //EBO
+    GLuint elementbuffer;
+    glGenBuffers(1, &elementbuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(voxel_indices), voxel_indices, GL_STATIC_DRAW);
 
-    GLuint colorbuffer;
-    glGenBuffers(1, &colorbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_solid_color_buffer_data), g_solid_color_buffer_data, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
 
-    const char* vertex_shader =
-    "#version 400\n"
-    "layout(location = 0) in vec3 vertexPosition_modelspace;"
-    "layout(location = 1) in vec3 vertexColor;"
-    "out vec3 fragmentColor;"
-    "uniform mat4 MVP;"
-    "void main() {"
-    "   gl_Position = MVP * vec4(vertexPosition_modelspace,1);"
-    "   fragmentColor = vertexColor;"
-    "}";
+    Shader shader_programme("../src/shaders/TestShader.vert","../src/shaders/TestShader.frag");
+    GLuint MatrixID = glGetUniformLocation(shader_programme.ID, "MVP");
+    GLuint VoxelColorID = glGetUniformLocation(shader_programme.ID, "VOXEL_COLOR");
 
-    const char* fragment_shader =
-    "#version 400\n"
-    "in vec3 fragmentColor;"
-    "out vec3 colour;"
-    "void main() {"
-    "  colour = fragmentColor;"
-    "}";
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view;
+    glm::mat4 model;
+    glm::mat4 mvp;
 
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vertex_shader, nullptr);
-    glCompileShader(vs);
-
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragment_shader, nullptr);
-    glCompileShader(fs);
-
-    GLuint shader_programme = glCreateProgram();
-    glAttachShader(shader_programme, fs);
-    glAttachShader(shader_programme, vs);
-    glLinkProgram(shader_programme);
-
-    GLuint MatrixID = glGetUniformLocation(shader_programme, "MVP");
-
-    while(!glfwWindowShouldClose(window)&&!program_exit)
+    while(!glfwWindowShouldClose(window)&&!settings->PROGRAM_SHOULD_EXIT)
     {
         // Input
         float currentFrame = glfwGetTime();
@@ -153,89 +145,54 @@ int main(void)
         processInput(window);
 
         // Start the Dear ImGui frame
-        gui->drawControlPanel(&program_exit, &culling, &z_buffer, &use_cube_color, &cube_color, &clear_color);
+        gui->drawControlPanel();
         
         // Rendering
         int display_w, display_h;
         glfwMakeContextCurrent(window);
         glfwGetFramebufferSize(window, &display_w, &display_h);
-
-
-
-        glm::mat4 view = camera->GetViewMatrix();
-        glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 mvp = proj * view * model;
-
-        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
         glViewport(0, 0, display_w, display_h);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+
+        glm::vec4* clear_color = settings->CLEAR_COLOUR;
+        glClearColor(clear_color->x, clear_color->y, clear_color->z, clear_color->w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDepthFunc(GL_LESS);
-        glUseProgram(shader_programme);
 
-        if(culling)
-        {
-            glEnable(GL_CULL_FACE);
-        }
-        else
-        {
-            glDisable(GL_CULL_FACE);
-        }
+        if(settings->CULLING_ENABLED) { glEnable(GL_CULL_FACE); }
+        else { glDisable(GL_CULL_FACE); }
+        if(settings->Z_BUFFER_ENABLED) { glEnable(GL_DEPTH_TEST); }
+        else { glDisable(GL_DEPTH_TEST); }
+        if(settings->USE_WIREFRAME) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
+        else { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 
-        if(z_buffer)
+        if(settings->REGEN_VOXELDATA)
         {
-            glEnable(GL_DEPTH_TEST);
-        }
-        else
-        {
-            glDisable(GL_DEPTH_TEST);
+            generateVoxelData();
+            settings->REGEN_VOXELDATA = false;
         }
 
-        if(use_cube_color)
+        view = camera->GetViewMatrix();
+        shader_programme.use();
+
+        for(int z = 0; z < chunk_size; z++)
         {
-            for(int i = 0; i < 36*3; i+=3)
+            for(int y = 0; y < chunk_size; y++)
             {
-                g_solid_color_buffer_data[i] = cube_color.x;
-                g_solid_color_buffer_data[i+1] = cube_color.y;
-                g_solid_color_buffer_data[i+2] = cube_color.z;
+                for(int x = 0; x < chunk_size; x++)
+                {
+                    if(voxeldata[x][y][z].enabled)
+                    {
+                        model = glm::translate(glm::mat4(1.0f), glm::vec3(x,y,z));
+                        mvp = proj * view * model;
+                        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+                        shader_programme.setVec3("VOXEL_COLOR", voxeldata[x][y][z].col);
+                        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+                    }
+                }
             }
-            glBufferData(GL_ARRAY_BUFFER, sizeof(g_solid_color_buffer_data), g_solid_color_buffer_data, GL_STATIC_DRAW);
-            update_color_buffer = false;
         }
 
-        else if(!use_cube_color)
-        {
-            glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
-            update_color_buffer = true;
-        }
 
-        // 1st attribute buffer : vertices
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-           0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-           3,                  // size
-           GL_FLOAT,           // type
-           GL_FALSE,           // normalized?
-           0,                  // stride
-           nullptr            // array buffer offset
-        );
-        // Draw the triangle !
-        glDrawArrays(GL_TRIANGLES, 0, 12*3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-
-        // 2nd attribute buffer : colors
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
-        glVertexAttribPointer(
-            1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-            3,                                // size
-            GL_FLOAT,                         // type
-            GL_FALSE,                         // normalized?
-            0,                                // stride
-            nullptr                          // array buffer offset
-        );
-        glDisableVertexAttribArray(0);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwMakeContextCurrent(window);

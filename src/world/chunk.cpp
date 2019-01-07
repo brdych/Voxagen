@@ -28,12 +28,7 @@ void Chunk::setActive(bool active) {
     _active = active;
 }
 
-/*static const int WORLD_SIZE = 1;
-Chunk*** _chunks;
-_chunks = new Chunk**[WORLD_SIZE];
-for (int i = 0; i < WORLD_SIZE; i++) {
-    _chunks[i] = new Chunk*[WORLD_SIZE];
-    for (int j = 0; j < WORLD_SIZE; j++) {
-        _chunks[i][j] = new Chunk[WORLD_SIZE];
-    }
-}*/
+void Chunk::render()
+{
+
+}

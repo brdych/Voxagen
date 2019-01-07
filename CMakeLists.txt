@@ -36,28 +36,4 @@ add_library("glad" "${GLAD_DIR}/src/glad.c")
 target_include_directories("glad" PRIVATE "${GLAD_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_DIR}/include")
 target_link_libraries(${PROJECT_NAME} "glad" "${CMAKE_DL_LIBS}")
-  
-#imgui
-#set(IMGUI_DIR "${LIB_DIR}/imgui")
-
-#set(IMGUI_SOURCES
-#"${IMGUI_DIR}/imgui.cpp"
-#"${IMGUI_DIR}/imgui_demo.cpp"
-#"${IMGUI_DIR}/imgui_draw.cpp"
-#"${IMGUI_DIR}/imgui_impl_opengl3.cpp"
-#"${IMGUI_DIR}/imgui_impl_glfw.cpp")
-
-#set(IMGUI_HEADERS
-#"${IMGUI_DIR}/imconfig.h"
-#"${IMGUI_DIR}/imgui.h"
-#"${IMGUI_DIR}/imgui_internal.h"
-#"${IMGUI_DIR}/imstb_rectpack.h"
-#"${IMGUI_DIR}/imstb_textedit.h"
-#"${IMGUI_DIR}/imstb_truetype.h"
-#"${IMGUI_DIR}/imgui_impl_opengl3.h"
-#"${IMGUI_DIR}/imgui_impl_glfw.h")
-
-#add_library(imgui ${IMGUI_SOURCES} ${IMGUI_HEADERS})
-
-#target_link_libraries(${PROJECT_NAME} imgui)
 
