@@ -1,31 +1,41 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
+#include<stdio.h>
+#include<iostream>
+
 #include"cube.hpp"
+#include"utility/voxelrenderer.hpp"
+#include"worldattributes.hpp"
 
 class Chunk {
 public:
-    
-    static const int CHUNK_SIZE = 8;
-    
 
-    Chunk();
+    //Variables
+    static const int CHUNK_SIZE = 16;
+    int chunkX;
+    int chunkY;
+    int chunkZ;
+    bool voxeldata[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
+    //Methods
+    void BuildVoxelData();
+    void BuildChunkMesh();
+    void AddCube(uint x, uint y, uint z);
+    void Render();
+
+    //Constructor and Destructor
+    Chunk(int x, int y, int z);
     ~Chunk();
     
-    void render();
-    
-    bool getActive();
-    
-    void setActive(bool active);
-    
 private:
-    
-    bool _active;
-    Cube*** _cubes;
-    
-    void renderCube();
 
+    //Variables
+    VoxelRenderer _renderer;
+    std::vector<GLfloat>* _cvs = new std::vector<GLfloat>();
+
+    GLuint _chunkVAO;
+    GLuint _chunkVBO;
 };
 
 #endif // CHUNK_H
