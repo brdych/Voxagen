@@ -37,7 +37,10 @@ float lastFrame = 0.0f;
 bool free_mouse = false;
 bool alt_pressed = false;
 
-const int chunk_size = 16;
+const static int chunk_size = 32;
+const static GLfloat voxel_size = 0.5f;
+
+std::vector<GLfloat>* cvs = new std::vector<GLfloat>();
 
 struct Voxel{
     bool enabled;
@@ -73,6 +76,168 @@ void generateVoxelData()
     cout <<"Voxel data created!" << endl;
 }
 
+void createCube(int x, int y, int z)
+{
+    glm::vec3 v0 = glm::vec3(x-voxel_size,y-voxel_size,z-voxel_size);
+    glm::vec3 v1 = glm::vec3(x-voxel_size,y-voxel_size,z+voxel_size);
+    glm::vec3 v2 = glm::vec3(x+voxel_size,y-voxel_size,z-voxel_size);
+    glm::vec3 v3 = glm::vec3(x+voxel_size,y-voxel_size,z+voxel_size);
+    glm::vec3 v4 = glm::vec3(x-voxel_size,y+voxel_size,z-voxel_size);
+    glm::vec3 v5 = glm::vec3(x-voxel_size,y+voxel_size,z+voxel_size);
+    glm::vec3 v6 = glm::vec3(x+voxel_size,y+voxel_size,z-voxel_size);
+    glm::vec3 v7 = glm::vec3(x+voxel_size,y+voxel_size,z+voxel_size);
+
+    //Top
+    cvs->push_back(v4.x);
+    cvs->push_back(v4.y);
+    cvs->push_back(v4.z);
+
+    cvs->push_back(v7.x);
+    cvs->push_back(v7.y);
+    cvs->push_back(v7.z);
+
+    cvs->push_back(v6.x);
+    cvs->push_back(v6.y);
+    cvs->push_back(v6.z);
+
+    cvs->push_back(v4.x);
+    cvs->push_back(v4.y);
+    cvs->push_back(v4.z);
+
+    cvs->push_back(v5.x);
+    cvs->push_back(v5.y);
+    cvs->push_back(v5.z);
+
+    cvs->push_back(v7.x);
+    cvs->push_back(v7.y);
+    cvs->push_back(v7.z);
+
+    //Bottom
+    cvs->push_back(v1.x);
+    cvs->push_back(v1.y);
+    cvs->push_back(v1.z);
+
+    cvs->push_back(v2.x);
+    cvs->push_back(v2.y);
+    cvs->push_back(v2.z);
+
+    cvs->push_back(v3.x);
+    cvs->push_back(v3.y);
+    cvs->push_back(v3.z);
+
+    cvs->push_back(v1.x);
+    cvs->push_back(v1.y);
+    cvs->push_back(v1.z);
+
+    cvs->push_back(v0.x);
+    cvs->push_back(v0.y);
+    cvs->push_back(v0.z);
+
+    cvs->push_back(v2.x);
+    cvs->push_back(v2.y);
+    cvs->push_back(v2.z);
+
+    //Right
+    cvs->push_back(v7.x);
+    cvs->push_back(v7.y);
+    cvs->push_back(v7.z);
+
+    cvs->push_back(v2.x);
+    cvs->push_back(v2.y);
+    cvs->push_back(v2.z);
+
+    cvs->push_back(v6.x);
+    cvs->push_back(v6.y);
+    cvs->push_back(v6.z);
+
+    cvs->push_back(v7.x);
+    cvs->push_back(v7.y);
+    cvs->push_back(v7.z);
+
+    cvs->push_back(v3.x);
+    cvs->push_back(v3.y);
+    cvs->push_back(v3.z);
+
+    cvs->push_back(v2.x);
+    cvs->push_back(v2.y);
+    cvs->push_back(v2.z);
+
+    //Left
+    cvs->push_back(v4.x);
+    cvs->push_back(v4.y);
+    cvs->push_back(v4.z);
+
+    cvs->push_back(v1.x);
+    cvs->push_back(v1.y);
+    cvs->push_back(v1.z);
+
+    cvs->push_back(v5.x);
+    cvs->push_back(v5.y);
+    cvs->push_back(v5.z);
+
+    cvs->push_back(v4.x);
+    cvs->push_back(v4.y);
+    cvs->push_back(v4.z);
+
+    cvs->push_back(v0.x);
+    cvs->push_back(v0.y);
+    cvs->push_back(v0.z);
+
+    cvs->push_back(v1.x);
+    cvs->push_back(v1.y);
+    cvs->push_back(v1.z);
+
+    //Back
+    cvs->push_back(v6.x);
+    cvs->push_back(v6.y);
+    cvs->push_back(v6.z);
+
+    cvs->push_back(v0.x);
+    cvs->push_back(v0.y);
+    cvs->push_back(v0.z);
+
+    cvs->push_back(v4.x);
+    cvs->push_back(v4.y);
+    cvs->push_back(v4.z);
+
+    cvs->push_back(v6.x);
+    cvs->push_back(v6.y);
+    cvs->push_back(v6.z);
+
+    cvs->push_back(v2.x);
+    cvs->push_back(v2.y);
+    cvs->push_back(v2.z);
+
+    cvs->push_back(v0.x);
+    cvs->push_back(v0.y);
+    cvs->push_back(v0.z);
+
+    //Front
+    cvs->push_back(v5.x);
+    cvs->push_back(v5.y);
+    cvs->push_back(v5.z);
+
+    cvs->push_back(v3.x);
+    cvs->push_back(v3.y);
+    cvs->push_back(v3.z);
+
+    cvs->push_back(v7.x);
+    cvs->push_back(v7.y);
+    cvs->push_back(v7.z);
+
+    cvs->push_back(v5.x);
+    cvs->push_back(v5.y);
+    cvs->push_back(v5.z);
+
+    cvs->push_back(v1.x);
+    cvs->push_back(v1.y);
+    cvs->push_back(v1.z);
+
+    cvs->push_back(v3.x);
+    cvs->push_back(v3.y);
+    cvs->push_back(v3.z);
+}
+
 int main(void)
 {
     generateVoxelData();
@@ -84,14 +249,14 @@ int main(void)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     static const GLfloat voxel_vertices[] = {
-        -0.5f,-0.5f,-0.5f, //BLB 0
-        -0.5f,-0.5f, 0.5f, //BLF 1
-         0.5f,-0.5f,-0.5f, //BRB 2
-         0.5f,-0.5f, 0.5f, //BRF 3
-        -0.5f, 0.5f,-0.5f, //TLB 4
-        -0.5f, 0.5f, 0.5f, //TLF 5
-         0.5f, 0.5f,-0.5f, //TRB 6
-         0.5f, 0.5f, 0.5f  //TRF 7
+        -voxel_size,-voxel_size,-voxel_size, //BLB 0
+        -voxel_size,-voxel_size, voxel_size, //BLF 1
+         voxel_size,-voxel_size,-voxel_size, //BRB 2
+         voxel_size,-voxel_size, voxel_size, //BRF 3
+        -voxel_size, voxel_size,-voxel_size, //TLB 4
+        -voxel_size, voxel_size, voxel_size, //TLF 5
+         voxel_size, voxel_size,-voxel_size, //TRB 6
+         voxel_size, voxel_size, voxel_size  //TRF 7
     };
 
     static const GLuint voxel_indices[] = {
@@ -109,6 +274,20 @@ int main(void)
         5,1,3
     };
 
+    for(int z = 0; z < chunk_size; z++)
+    {
+        for(int y = 0; y < chunk_size; y++)
+        {
+            for(int x = 0; x < chunk_size; x++)
+            {
+                if(voxeldata[x][y][z].enabled)
+                {
+                    createCube(x,y,z);
+                }
+            }
+        }
+    }
+
     //VAO
     GLuint vertexarray;
     glGenVertexArrays(1, &vertexarray);
@@ -117,12 +296,12 @@ int main(void)
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(voxel_vertices), voxel_vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, cvs->size()*sizeof(GLfloat), cvs->data(), GL_STATIC_DRAW);
     //EBO
-    GLuint elementbuffer;
-    glGenBuffers(1, &elementbuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(voxel_indices), voxel_indices, GL_STATIC_DRAW);
+    //GLuint elementbuffer;
+    //glGenBuffers(1, &elementbuffer);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(voxel_indices), voxel_indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
@@ -171,28 +350,15 @@ int main(void)
             settings->REGEN_VOXELDATA = false;
         }
 
+        cout << cvs->size()/3 << endl;
+
         view = camera->GetViewMatrix();
         shader_programme.use();
-
-        for(int z = 0; z < chunk_size; z++)
-        {
-            for(int y = 0; y < chunk_size; y++)
-            {
-                for(int x = 0; x < chunk_size; x++)
-                {
-                    if(voxeldata[x][y][z].enabled)
-                    {
-                        model = glm::translate(glm::mat4(1.0f), glm::vec3(x,y,z));
-                        mvp = proj * view * model;
-                        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-                        shader_programme.setVec3("VOXEL_COLOR", voxeldata[x][y][z].col);
-                        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-                    }
-                }
-            }
-        }
-
-
+        shader_programme.setVec3("VOXEL_COLOR", glm::vec3(0.5,0.5,0.5));
+        model = glm::mat4(1);
+        mvp = proj * view * model;
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+        glDrawArrays(GL_TRIANGLES, 0, cvs->size()/3);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwMakeContextCurrent(window);
