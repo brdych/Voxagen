@@ -38,8 +38,6 @@ float lastFrame = 0.0f;
 bool free_mouse = false;
 bool alt_pressed = false;
 
-//Chunk* chunks[num_chunks][num_chunks][num_chunks];
-
 float RandomFloat(float a, float b) {
     return a + ((((float) rand()) / (float) RAND_MAX) * (b - a));
 }
@@ -58,13 +56,56 @@ int main(void)
     cm->CreateChunks();
     cm->BuildMeshes();
 
-    Shader shader_programme("../src/shaders/TestShader.vert","../src/shaders/TestShader.frag");
-    GLint MatrixID = glGetUniformLocation(shader_programme.ID, "MVP");
+    Shader block_shader("../src/shaders/TestShader.vert","../src/shaders/TestShader.frag");
+    GLint MatrixID = glGetUniformLocation(block_shader.ID, "MVP");
+
+    Shader light_shader("../src/shaders/LightShader.vert","../src/shaders/LightShader.frag");
+    GLint LightMatrixID = glGetUniformLocation(light_shader.ID, "MVP");
 
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 400.0f);
     glm::mat4 model = glm::mat4(1);
     glm::mat4 view;
     glm::mat4 mvp;
+
+    static const GLfloat light_vertices[] = {
+        -0.5f,-0.5f,-0.5f, //BLB 0
+        -0.5f,-0.5f, 0.5f, //BLF 1
+         0.5f,-0.5f,-0.5f, //BRB 2
+         0.5f,-0.5f, 0.5f, //BRF 3
+        -0.5f, 0.5f,-0.5f, //TLB 4
+        -0.5f, 0.5f, 0.5f, //TLF 5
+         0.5f, 0.5f,-0.5f, //TRB 6
+         0.5f, 0.5f, 0.5f  //TRF 7
+    };
+    static const GLuint light_indices[] = {
+        4,7,6,  //Top
+        4,5,7,
+        1,2,3,  //Bottom
+        1,0,2,
+        7,2,6,  //Right
+        7,3,2,
+        4,1,5,  //Left
+        4,0,1,
+        6,0,4,  //Back
+        6,2,0,
+        5,3,7,  //Front
+        5,1,3
+    };
+    GLuint lightVAO, lightVBO, lightEBO;
+    glGenVertexArrays(1, &lightVAO);
+    glGenBuffers(1, &lightVBO);
+    glGenBuffers(1, &lightEBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(light_vertices), light_vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(light_indices), light_indices, GL_STATIC_DRAW);
+
+    glBindVertexArray(lightVAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+
 
     while(!glfwWindowShouldClose(window)&&!settings->PROGRAM_SHOULD_EXIT)
     {
@@ -86,13 +127,23 @@ int main(void)
         if(settings->USE_WIREFRAME) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
         else { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 
+        //Update View
         view = camera->GetViewMatrix();
-        shader_programme.use();
 
-        uint num_chunks = cm->num_chunks;
-        for(uint x = 0; x < num_chunks; x++)
-            for(uint y = 0; y < num_chunks; y++)
-                for(uint z = 0; z < num_chunks; z++)
+        //Draw Light
+        light_shader.use();
+        glm::mat4 model = glm::translate(glm::mat4(1), *settings->LIGHT_POS);
+        mvp = proj * view * model;
+        glUniformMatrix4fv(LightMatrixID, 1, GL_FALSE, &mvp[0][0]);
+        glBindVertexArray(lightVAO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+
+        //Draw Chunks
+        block_shader.use();
+        for(uint x = 0; x < cm->num_chunks_X; x++)
+            for(uint y = 0; y < cm->num_chunks_Y; y++)
+                for(uint z = 0; z < cm->num_chunks_Z; z++)
                 {
                     glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3(x*Chunk::CHUNK_SIZE,y*Chunk::CHUNK_SIZE,z*Chunk::CHUNK_SIZE));
                     mvp = proj * view * model;
@@ -101,7 +152,7 @@ int main(void)
                 }
 
         // Start the Dear ImGui frame
-        gui->drawControlPanel();
+        gui->drawControlPanel(camera);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwMakeContextCurrent(window);

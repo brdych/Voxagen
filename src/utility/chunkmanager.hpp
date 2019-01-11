@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "world/chunk.hpp"
+#include "perlinnoise.hpp"
 
 class ChunkManager
 {
@@ -13,12 +14,20 @@ public:
     Chunk* GetChunk(int x, int y, int z);
     bool BlockExistsInChunk(uint x, uint y, uint z, int cx, int cy, int cz);
     void Render();
+    bool GetBlockValue(double x, double y, double z);
     void CreateChunks();
     void BuildMeshes();
 
+    PerlinNoise* _perlin = new PerlinNoise(10);
+
     //Variables
-    static const uint num_chunks = 16;
-    Chunk* chunks[num_chunks][num_chunks][num_chunks];
+    static const uint num_chunks_X = 32;
+    static const uint num_chunks_Y = 1;
+    static const uint num_chunks_Z = 32;
+    static const uint num_chunks = num_chunks_X * num_chunks_Y * num_chunks_Z;
+
+
+    Chunk* chunks[num_chunks_X][num_chunks_Y][num_chunks_Z];
 
     //Constructor and Destructor
     ~ChunkManager();

@@ -6,6 +6,7 @@
 #include "gui/imgui.h"
 #include "gui/imgui_impl_glfw.h"
 #include "gui/imgui_impl_opengl3.h"
+#include "utility/camera.hpp"
 
 class GuiManager {
 public:
@@ -13,7 +14,7 @@ public:
     GuiManager(GLFWwindow* window);
     GuiManager(GuiManager& orig);
     virtual ~GuiManager();
-    void drawControlPanel();
+    void drawControlPanel(Camera* c);
     
 private:
     bool show_demo_window = false;

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "glm/vec4.hpp"
+#include "glm/vec3.hpp"
 
 
 
@@ -17,6 +18,7 @@ public:
     bool USE_WIREFRAME;
 
     glm::vec4* CLEAR_COLOUR;
+    glm::vec3* LIGHT_POS;
 
 private:
     VoxagenSettings();
