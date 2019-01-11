@@ -11,6 +11,7 @@ using namespace std;
 #include "utility/loader.hpp"
 #include "utility/voxagensettings.hpp"
 #include "utility/shader.hpp"
+#include "utility/chunkmanager.hpp"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -21,14 +22,13 @@ void processInput(GLFWwindow *window);
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
-const uint num_chunks = 1;
 
 VoxagenSettings* settings = VoxagenSettings::SettingsInstance();
 
 Loader* loader = new Loader();
 GLFWwindow* window = loader->loadGL(SCR_WIDTH, SCR_HEIGHT);
 GuiManager* gui = new GuiManager(window);
-Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 20.0f));
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -38,7 +38,7 @@ float lastFrame = 0.0f;
 bool free_mouse = false;
 bool alt_pressed = false;
 
-Chunk* chunks[num_chunks][num_chunks][num_chunks];
+//Chunk* chunks[num_chunks][num_chunks][num_chunks];
 
 float RandomFloat(float a, float b) {
     return a + ((((float) rand()) / (float) RAND_MAX) * (b - a));
@@ -46,7 +46,6 @@ float RandomFloat(float a, float b) {
 
 int main(void)
 {
-    //generateVoxelData();
     cout << "Hello world!" << endl;
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -54,45 +53,10 @@ int main(void)
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    /*static const GLfloat voxel_vertices[] = {
-        -voxel_size,-voxel_size,-voxel_size, //BLB 0
-        -voxel_size,-voxel_size, voxel_size, //BLF 1
-         voxel_size,-voxel_size,-voxel_size, //BRB 2
-         voxel_size,-voxel_size, voxel_size, //BRF 3
-        -voxel_size, voxel_size,-voxel_size, //TLB 4
-        -voxel_size, voxel_size, voxel_size, //TLF 5
-         voxel_size, voxel_size,-voxel_size, //TRB 6
-         voxel_size, voxel_size, voxel_size  //TRF 7
-    };
-
-    static const GLuint voxel_indices[] = {
-        4,7,6,  //Top
-        4,5,7,
-        1,2,3,  //Bottom
-        1,0,2,
-        7,2,6,  //Right
-        7,3,2,
-        4,1,5,  //Left
-        4,0,1,
-        6,0,4,  //Back
-        6,2,0,
-        5,3,7,  //Front
-        5,1,3
-    };*/
-
-
-    for(uint x = 0; x < num_chunks; x++)
-        for(uint y = 0; y < num_chunks; y++)
-            for(uint z = 0; z < num_chunks; z++)
-                chunks[x][y][z] = new Chunk(x,y,z);
-
-    //EBO
-    //GLuint elementbuffer;
-    //glGenBuffers(1, &elementbuffer);
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(voxel_indices), voxel_indices, GL_STATIC_DRAW);
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    //glEnableVertexAttribArray(0);
+    VoxagenSettings*vs = VoxagenSettings::SettingsInstance();
+    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
+    cm->CreateChunks();
+    cm->BuildMeshes();
 
     Shader shader_programme("../src/shaders/TestShader.vert","../src/shaders/TestShader.frag");
     GLint MatrixID = glGetUniformLocation(shader_programme.ID, "MVP");
@@ -125,6 +89,7 @@ int main(void)
         view = camera->GetViewMatrix();
         shader_programme.use();
 
+        uint num_chunks = cm->num_chunks;
         for(uint x = 0; x < num_chunks; x++)
             for(uint y = 0; y < num_chunks; y++)
                 for(uint z = 0; z < num_chunks; z++)
@@ -132,7 +97,7 @@ int main(void)
                     glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3(x*Chunk::CHUNK_SIZE,y*Chunk::CHUNK_SIZE,z*Chunk::CHUNK_SIZE));
                     mvp = proj * view * model;
                     glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-                    chunks[x][y][z]->Render();
+                    cm->chunks[x][y][z]->Render();
                 }
 
         // Start the Dear ImGui frame

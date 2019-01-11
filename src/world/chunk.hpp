@@ -1,12 +1,12 @@
-#ifndef CHUNK_H
-#define CHUNK_H
+#ifndef CHUNK_HPP
+#define CHUNK_HPP
 
 #include<stdio.h>
 #include<iostream>
 
-#include"cube.hpp"
-#include"utility/voxelrenderer.hpp"
-#include"worldattributes.hpp"
+#include "cube.hpp"
+#include "utility/voxelrenderer.hpp"
+#include "worldattributes.hpp"
 
 class Chunk {
 public:
@@ -33,9 +33,7 @@ private:
     //Variables
     VoxelRenderer _renderer;
     std::vector<GLfloat>* _cvs = new std::vector<GLfloat>();
-
     GLuint _chunkVAO;
     GLuint _chunkVBO;
 };
-
-#endif // CHUNK_H
+#endif // CHUNK_HPP

@@ -39,10 +39,6 @@ void GuiManager::drawControlPanel() {
     ImGui::Checkbox("Wireframe", &_settings->USE_WIREFRAME);// Edit Wireframe bool
     ImGui::ColorEdit3("clear color", (float*)_settings->CLEAR_COLOUR);  // Edit 3 floats representing a color
 
-    if (ImGui::Button("Regenerate VoxelData")) {
-        _settings->REGEN_VOXELDATA = true;
-    }
-
     if (ImGui::Button("Exit Voxagen")) {
         _settings->PROGRAM_SHOULD_EXIT = true;
     }

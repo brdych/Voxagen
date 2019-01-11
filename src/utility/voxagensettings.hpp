@@ -15,7 +15,6 @@ public:
     bool CULLING_ENABLED;
     bool Z_BUFFER_ENABLED;
     bool USE_WIREFRAME;
-    bool REGEN_VOXELDATA;
 
     glm::vec4* CLEAR_COLOUR;
 

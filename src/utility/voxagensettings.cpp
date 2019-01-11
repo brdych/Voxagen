@@ -4,18 +4,19 @@ VoxagenSettings* VoxagenSettings::_instance;
 
 VoxagenSettings::VoxagenSettings()
 {
-    CLEAR_COLOUR = new glm::vec4(0.3f, 0.8f, 1.0f, 1.0f);
-
+    CLEAR_COLOUR = new glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     PROGRAM_SHOULD_EXIT = false;
     CULLING_ENABLED = true;
     Z_BUFFER_ENABLED = true;
-
-    std::cout << "Settings Loaded" << std::endl;
 }
 
 VoxagenSettings* VoxagenSettings::SettingsInstance()
 {
+    //std::cout << "Request: VoxagenSettings Instance" << std::endl;
     if(_instance == nullptr)
+    {
+        std::cout << "- Creating New VoxagenSettings Instance" << std::endl;
         _instance = new VoxagenSettings();
+    }
     return _instance;
 }
