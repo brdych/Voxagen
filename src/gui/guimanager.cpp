@@ -35,10 +35,15 @@ void GuiManager::drawControlPanel(Camera* c) {
     ImGui::Checkbox("GL Culling", &_settings->CULLING_ENABLED);                 // Edit bools storing GL Culling
     ImGui::Checkbox("GL Depth Buffer", &_settings->Z_BUFFER_ENABLED);           // Edit bools storing GL Z_Buffer
     ImGui::Checkbox("Wireframe", &_settings->USE_WIREFRAME);                    // Edit Wireframe bool
-    ImGui::ColorEdit3("clear color", (float*)_settings->CLEAR_COLOUR);          // Edit 3 floats representing a color
+    ImGui::ColorEdit3("Clear Color", (float*)_settings->CLEAR_COLOUR);          // Edit 3 floats representing a color
+
+    ImGui::ColorEdit3("Global Light Color", (float*)_settings->GLOBAL_LIGHT_COL);
+
+
 
     if (ImGui::Button("Update Light Pos")) {
         _settings->LIGHT_POS = new glm::vec3(c->Position);
+        _settings->GLOBAL_LIGHT_DIR = new glm::vec3(c->Front);
     }
 
     if (ImGui::Button("Exit Voxagen")) {

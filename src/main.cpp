@@ -56,13 +56,13 @@ int main(void)
     cm->CreateChunks();
     cm->BuildMeshes();
 
-    Shader block_shader("../src/shaders/TestShader.vert","../src/shaders/TestShader.frag");
+    Shader block_shader("../src/shaders/BlockShader.vert","../src/shaders/BlockShader.frag");
     GLint MatrixID = glGetUniformLocation(block_shader.ID, "MVP");
 
     Shader light_shader("../src/shaders/LightShader.vert","../src/shaders/LightShader.frag");
     GLint LightMatrixID = glGetUniformLocation(light_shader.ID, "MVP");
 
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 400.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 1000.0f);
     glm::mat4 model = glm::mat4(1);
     glm::mat4 view;
     glm::mat4 mvp;
@@ -139,16 +139,22 @@ int main(void)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
+
         //Draw Chunks
         block_shader.use();
+        block_shader.setVec3("GLOBAL_LIGHT_COL", *settings->GLOBAL_LIGHT_COL);
+        block_shader.setVec3("GLOBAL_LIGHT_DIR", *settings->GLOBAL_LIGHT_DIR);
         for(uint x = 0; x < cm->num_chunks_X; x++)
             for(uint y = 0; y < cm->num_chunks_Y; y++)
                 for(uint z = 0; z < cm->num_chunks_Z; z++)
                 {
-                    glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3(x*Chunk::CHUNK_SIZE,y*Chunk::CHUNK_SIZE,z*Chunk::CHUNK_SIZE));
-                    mvp = proj * view * model;
-                    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-                    cm->chunks[x][y][z]->Render();
+                    if(cm->chunks[x][y][z]->ShouldRender())
+                    {
+                        model = glm::translate(glm::mat4(1), glm::vec3(x*Chunk::CHUNK_SIZE,y*Chunk::CHUNK_SIZE,z*Chunk::CHUNK_SIZE));
+                        mvp = proj * view * model;
+                        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+                        cm->chunks[x][y][z]->Render();
+                    }
                 }
 
         // Start the Dear ImGui frame

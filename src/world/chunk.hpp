@@ -18,11 +18,13 @@ public:
     int chunkZ;
     bool voxeldata[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
+
     //Methods
     void BuildVoxelData();
     void BuildChunkMesh();
     void AddCube(uint x, uint y, uint z);
     void Render();
+    bool ShouldRender();
 
     //Constructor and Destructor
     Chunk(int x, int y, int z);

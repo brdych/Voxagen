@@ -20,6 +20,9 @@ public:
     glm::vec4* CLEAR_COLOUR;
     glm::vec3* LIGHT_POS;
 
+    glm::vec3* GLOBAL_LIGHT_DIR;
+    glm::vec3* GLOBAL_LIGHT_COL;
+
 private:
     VoxagenSettings();
     static VoxagenSettings* _instance;

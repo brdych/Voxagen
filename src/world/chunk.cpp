@@ -12,6 +12,11 @@ Chunk::~Chunk() {
 
 }
 
+bool Chunk::ShouldRender()
+{
+    return _cvs->size() > 0;
+}
+
 void Chunk::BuildVoxelData()
 {
     ChunkManager* cm = ChunkManager::ChunkManagerInstance();
@@ -21,7 +26,6 @@ void Chunk::BuildVoxelData()
         for(uint z = 0; z < CHUNK_SIZE; z++)
             for(uint y = 0; y < CHUNK_SIZE; y++)
             {
-
                 //voxeldata[x][y][z] = (rand() < (RAND_MAX/2));
                 //voxeldata[x][y][z] = true;
                 voxeldata[x][y][z] = cm->GetBlockValue(x+cx,y+cy,z+cz);
@@ -80,13 +84,6 @@ void Chunk::AddCube(uint x, uint y, uint z)
     glm::vec3 v6 = glm::vec3(x+voxel_size,y+voxel_size,z-voxel_size);
     glm::vec3 v7 = glm::vec3(x+voxel_size,y+voxel_size,z+voxel_size);
 
-    //0 = 0 1 0
-    //1 = 0 -1 0
-    //2 = 1 0 0
-    //3 = -1 0 0
-    //4 = 0 0 1
-    //5 = 0 0 -1
-
     //Top
     adjacent_block = (y!=CHUNK_SIZE-1) ? voxeldata[x][y+1][z] : cm->BlockExistsInChunk(x,0,z, chunkX,chunkY+1,chunkZ);
     if(!adjacent_block)
@@ -94,32 +91,32 @@ void Chunk::AddCube(uint x, uint y, uint z)
         _cvs->push_back(v4.x);
         _cvs->push_back(v4.y);
         _cvs->push_back(v4.z);
-        _cvs->push_back(0.0f);
+        _cvs->push_back(0);
 
         _cvs->push_back(v7.x);
         _cvs->push_back(v7.y);
         _cvs->push_back(v7.z);
-        _cvs->push_back(0.0f);
+        _cvs->push_back(0);
 
         _cvs->push_back(v6.x);
         _cvs->push_back(v6.y);
         _cvs->push_back(v6.z);
-        _cvs->push_back(0.0f);
+        _cvs->push_back(0);
 
         _cvs->push_back(v4.x);
         _cvs->push_back(v4.y);
         _cvs->push_back(v4.z);
-        _cvs->push_back(0.0f);
+        _cvs->push_back(0);
 
         _cvs->push_back(v5.x);
         _cvs->push_back(v5.y);
         _cvs->push_back(v5.z);
-        _cvs->push_back(0.0f);
+        _cvs->push_back(0);
 
         _cvs->push_back(v7.x);
         _cvs->push_back(v7.y);
         _cvs->push_back(v7.z);
-        _cvs->push_back(0.0f);
+        _cvs->push_back(0);
     }
 
     //Bottom
@@ -129,32 +126,32 @@ void Chunk::AddCube(uint x, uint y, uint z)
         _cvs->push_back(v1.x);
         _cvs->push_back(v1.y);
         _cvs->push_back(v1.z);
-        _cvs->push_back(1.0f);
+        _cvs->push_back(1);
 
         _cvs->push_back(v2.x);
         _cvs->push_back(v2.y);
         _cvs->push_back(v2.z);
-        _cvs->push_back(1.0f);
+        _cvs->push_back(1);
 
         _cvs->push_back(v3.x);
         _cvs->push_back(v3.y);
         _cvs->push_back(v3.z);
-        _cvs->push_back(1.0f);
+        _cvs->push_back(1);
 
         _cvs->push_back(v1.x);
         _cvs->push_back(v1.y);
         _cvs->push_back(v1.z);
-        _cvs->push_back(1.0f);
+        _cvs->push_back(1);
 
         _cvs->push_back(v0.x);
         _cvs->push_back(v0.y);
         _cvs->push_back(v0.z);
-        _cvs->push_back(1.0f);
+        _cvs->push_back(1);
 
         _cvs->push_back(v2.x);
         _cvs->push_back(v2.y);
         _cvs->push_back(v2.z);
-        _cvs->push_back(1.0f);
+        _cvs->push_back(1);
     }
 
     //Right
@@ -164,32 +161,32 @@ void Chunk::AddCube(uint x, uint y, uint z)
         _cvs->push_back(v7.x);
         _cvs->push_back(v7.y);
         _cvs->push_back(v7.z);
-        _cvs->push_back(2.0f);
+        _cvs->push_back(2);
 
         _cvs->push_back(v2.x);
         _cvs->push_back(v2.y);
         _cvs->push_back(v2.z);
-        _cvs->push_back(2.0f);
+        _cvs->push_back(2);
 
         _cvs->push_back(v6.x);
         _cvs->push_back(v6.y);
         _cvs->push_back(v6.z);
-        _cvs->push_back(2.0f);
+        _cvs->push_back(2);
 
         _cvs->push_back(v7.x);
         _cvs->push_back(v7.y);
         _cvs->push_back(v7.z);
-        _cvs->push_back(2.0f);
+        _cvs->push_back(2);
 
         _cvs->push_back(v3.x);
         _cvs->push_back(v3.y);
         _cvs->push_back(v3.z);
-        _cvs->push_back(2.0f);
+        _cvs->push_back(2);
 
         _cvs->push_back(v2.x);
         _cvs->push_back(v2.y);
         _cvs->push_back(v2.z);
-        _cvs->push_back(2.0f);
+        _cvs->push_back(2);
     }
 
     //Left
@@ -199,32 +196,32 @@ void Chunk::AddCube(uint x, uint y, uint z)
         _cvs->push_back(v4.x);
         _cvs->push_back(v4.y);
         _cvs->push_back(v4.z);
-        _cvs->push_back(3.0f);
+        _cvs->push_back(3);
 
         _cvs->push_back(v1.x);
         _cvs->push_back(v1.y);
         _cvs->push_back(v1.z);
-        _cvs->push_back(3.0f);
+        _cvs->push_back(3);
 
         _cvs->push_back(v5.x);
         _cvs->push_back(v5.y);
         _cvs->push_back(v5.z);
-        _cvs->push_back(3.0f);
+        _cvs->push_back(3);
 
         _cvs->push_back(v4.x);
         _cvs->push_back(v4.y);
         _cvs->push_back(v4.z);
-        _cvs->push_back(3.0f);
+        _cvs->push_back(3);
 
         _cvs->push_back(v0.x);
         _cvs->push_back(v0.y);
         _cvs->push_back(v0.z);
-        _cvs->push_back(3.0f);
+        _cvs->push_back(3);
 
         _cvs->push_back(v1.x);
         _cvs->push_back(v1.y);
         _cvs->push_back(v1.z);
-        _cvs->push_back(3.0f);
+        _cvs->push_back(3);
     }
 
     //Front
@@ -234,32 +231,32 @@ void Chunk::AddCube(uint x, uint y, uint z)
         _cvs->push_back(v5.x);
         _cvs->push_back(v5.y);
         _cvs->push_back(v5.z);
-        _cvs->push_back(4.0f);
+        _cvs->push_back(4);
 
         _cvs->push_back(v3.x);
         _cvs->push_back(v3.y);
         _cvs->push_back(v3.z);
-        _cvs->push_back(4.0f);
+        _cvs->push_back(4);
 
         _cvs->push_back(v7.x);
         _cvs->push_back(v7.y);
         _cvs->push_back(v7.z);
-        _cvs->push_back(4.0f);
+        _cvs->push_back(4);
 
         _cvs->push_back(v5.x);
         _cvs->push_back(v5.y);
         _cvs->push_back(v5.z);
-        _cvs->push_back(4.0f);
+        _cvs->push_back(4);
 
         _cvs->push_back(v1.x);
         _cvs->push_back(v1.y);
         _cvs->push_back(v1.z);
-        _cvs->push_back(4.0f);
+        _cvs->push_back(4);
 
         _cvs->push_back(v3.x);
         _cvs->push_back(v3.y);
         _cvs->push_back(v3.z);
-        _cvs->push_back(4.0f);
+        _cvs->push_back(4);
     }
 
     //Back
@@ -269,32 +266,32 @@ void Chunk::AddCube(uint x, uint y, uint z)
         _cvs->push_back(v6.x);
         _cvs->push_back(v6.y);
         _cvs->push_back(v6.z);
-        _cvs->push_back(5.0f);
+        _cvs->push_back(5);
 
         _cvs->push_back(v0.x);
         _cvs->push_back(v0.y);
         _cvs->push_back(v0.z);
-        _cvs->push_back(5.0f);
+        _cvs->push_back(5);
 
         _cvs->push_back(v4.x);
         _cvs->push_back(v4.y);
         _cvs->push_back(v4.z);
-        _cvs->push_back(5.0f);
+        _cvs->push_back(5);
 
         _cvs->push_back(v6.x);
         _cvs->push_back(v6.y);
         _cvs->push_back(v6.z);
-        _cvs->push_back(5.0f);
+        _cvs->push_back(5);
 
         _cvs->push_back(v2.x);
         _cvs->push_back(v2.y);
         _cvs->push_back(v2.z);
-        _cvs->push_back(5.0f);
+        _cvs->push_back(5);
 
         _cvs->push_back(v0.x);
         _cvs->push_back(v0.y);
         _cvs->push_back(v0.z);
-        _cvs->push_back(5.0f);
+        _cvs->push_back(5);
     }
 }
 

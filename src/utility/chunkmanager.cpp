@@ -67,19 +67,17 @@ bool ChunkManager::GetBlockValue(double x, double y, double z)
 {
     double px = (double)x/(num_chunks_X*16);
     double py = (double)z/(num_chunks_Z*16);
+    //double pz = (double)y/(num_chunks_Y*16);
     double n;
-
     // Typical Perlin noise
-    n = _perlin->noise(10 * px, 10 * py, 0.8);
-
+    n = _perlin->noise(10 * px, 10 * py, 0);
     // Wood like structure
     //n = 20 * _perlin->noise(px, py, 0.8);
     //n = n - floor(n);
-
     // Map the values to the [0, 255] interval, for simplicity we use
     // tones of grey
-    n = (16)*n;
-
-    std::cout << "y= " << y << " n= "  << n << std::endl;
+    n = (16*16)*n;
+    //n = floor(n);
+    //std::cout << "y= " << y << " n= "  << n << std::endl;
     return (y<n ? true:false);
 }
