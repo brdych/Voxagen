@@ -12,7 +12,7 @@ class Chunk {
 public:
 
     //Variables
-    static const int CHUNK_SIZE = 16;
+    static const int CHUNK_SIZE = 32;
     int chunkX;
     int chunkY;
     int chunkZ;
@@ -24,7 +24,7 @@ public:
     void BuildChunkMesh();
     void AddCube(uint x, uint y, uint z);
     void Render();
-    bool ShouldRender();
+    bool ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos);
 
     //Constructor and Destructor
     Chunk(int x, int y, int z);

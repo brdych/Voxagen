@@ -29,17 +29,14 @@ void GuiManager::drawControlPanel(Camera* c) {
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);
     }
-    static float f = 0.0f;
     ImGui::Begin("Voxagen Control Panel");
     ImGui::Checkbox("Demo Window", &show_demo_window);                          // Edit bools storing our window open/close state
     ImGui::Checkbox("GL Culling", &_settings->CULLING_ENABLED);                 // Edit bools storing GL Culling
     ImGui::Checkbox("GL Depth Buffer", &_settings->Z_BUFFER_ENABLED);           // Edit bools storing GL Z_Buffer
     ImGui::Checkbox("Wireframe", &_settings->USE_WIREFRAME);                    // Edit Wireframe bool
     ImGui::ColorEdit3("Clear Color", (float*)_settings->CLEAR_COLOUR);          // Edit 3 floats representing a color
-
     ImGui::ColorEdit3("Global Light Color", (float*)_settings->GLOBAL_LIGHT_COL);
-
-
+    ImGui::SliderFloat("Fog Density", &_settings->FOG_INFO->z, 0, 0.05f);
 
     if (ImGui::Button("Update Light Pos")) {
         _settings->LIGHT_POS = new glm::vec3(c->Position);

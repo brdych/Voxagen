@@ -22,7 +22,7 @@ public:
 
     //Variables
     static const uint num_chunks_X = 32;
-    static const uint num_chunks_Y = 16;
+    static const uint num_chunks_Y = 4;
     static const uint num_chunks_Z = 32;
     static const uint num_chunks = num_chunks_X * num_chunks_Y * num_chunks_Z;
 

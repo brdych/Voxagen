@@ -22,6 +22,7 @@ public:
 
     glm::vec3* GLOBAL_LIGHT_DIR;
     glm::vec3* GLOBAL_LIGHT_COL;
+    glm::vec3* FOG_INFO;
 
 private:
     VoxagenSettings();

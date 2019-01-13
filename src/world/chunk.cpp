@@ -1,5 +1,6 @@
 #include "chunk.hpp"
 #include "utility/chunkmanager.hpp"
+#include "glm/glm.hpp"
 
 Chunk::Chunk(int x, int y, int z) {
     chunkX = x;
@@ -12,9 +13,16 @@ Chunk::~Chunk() {
 
 }
 
-bool Chunk::ShouldRender()
+bool Chunk::ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos)
 {
-    return _cvs->size() > 0;
+    if(_cvs->size() < 1)
+        return false;
+
+    //glm::vec3 vector = glm::normalize(glm::vec3(chunkX*CHUNK_SIZE/2,chunkY*CHUNK_SIZE/2,chunkZ*CHUNK_SIZE/2)-*cameraPos);
+    //if(abs(glm::acos(glm::dot(*cameraFront, vector))) > glm::radians(50.0f))
+        //return false;
+
+    return true;
 }
 
 void Chunk::BuildVoxelData()
