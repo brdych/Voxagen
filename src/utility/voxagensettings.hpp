@@ -16,6 +16,9 @@ public:
     bool CULLING_ENABLED;
     bool Z_BUFFER_ENABLED;
     bool USE_WIREFRAME;
+    bool SHOW_CHUNK_BOUNDS;
+    bool ONLY_RENDERING_CHUNKS;
+    bool MENU;
 
     glm::vec4* CLEAR_COLOUR;
     glm::vec3* LIGHT_POS;

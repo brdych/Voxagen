@@ -3,6 +3,7 @@
 
 #include <GLFW/glfw3.h>
 #include "camera.hpp"
+#include "utility/voxagensettings.hpp"
 
 
 class InputController

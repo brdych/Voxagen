@@ -13,8 +13,7 @@ public:
 
     //Methods
     static ChunkManager* ChunkManagerInstance();
-    Chunk* GetChunk(int x, int y, int z);
-    bool BlockExistsInChunk(uint x, uint y, uint z, int cx, int cy, int cz);
+    bool BlockExistsInChunk(int x, int y, int z, int cx, int cy, int cz);
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
     bool GetBlockValue(double x, double y, double z);
     void CreateChunks();

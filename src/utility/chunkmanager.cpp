@@ -55,19 +55,7 @@ void ChunkManager::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
     }
 }
 
-Chunk* ChunkManager::GetChunk(int x, int y, int z)
-{
-    //std::cout << "GetChunk(" << x << " " << y << " " << z << ")" << std::endl;
-    return nullptr;
-    if(x<num_chunks_X&&y<num_chunks_Y&&z<num_chunks_Z&&x>=0&&y>=0&&z>=0)
-    {
-        //std::cout << " - Allowed" << std::endl;
-        return chunks[x][y][z];
-    }
-    return nullptr;
-}
-
-bool ChunkManager::BlockExistsInChunk(uint x, uint y, uint z, int cx, int cy, int cz)
+bool ChunkManager::BlockExistsInChunk(int x, int y, int z, int cx, int cy, int cz)
 {
     return GetBlockValue((cx*Chunk::CHUNK_SIZE)+x, (cy*Chunk::CHUNK_SIZE)+y, (cz*Chunk::CHUNK_SIZE)+z);
 }
@@ -84,6 +72,6 @@ bool ChunkManager::GetBlockValue(double x, double y, double z)
     //n = n - floor(n);
     //Standard Noise
     n = _perlin->noise( 5*px, 5*py, 0);
-    n = n*100;
+    n = n*300;
     return (y<n ? true:false);
 }

@@ -20,14 +20,7 @@ void main()
 {
     gl_Position = MVP * vec4(position,1);
     fragmentCol = vec3(0.1,0.4,0.1);
-
-    if(normal      < 0.2)   {fragNormal = vec3(0,1,0);}
-    else if(normal < 1.2)   {fragNormal = vec3(0,-1,0);}
-    else if(normal < 2.2)   {fragNormal = vec3(1,0,0);}
-    else if(normal < 3.2)   {fragNormal = vec3(-1,0,0);}
-    else if(normal < 4.2)   {fragNormal = vec3(0,0,1);}
-    else if(normal < 5.2)   {fragNormal = vec3(0,0,-1);}
-
+    fragNormal=(normal<0.1)?vec3(0,1,0):(normal<1.1)?vec3(0,-1,0):(normal<2.1)?vec3(1,0,0):(normal<3.1)?vec3(-1,0,0):(normal<4.1)?vec3(0,0,1):vec3(0,0,-1);
     fogInfo = FOG_INFO;
     clearCol = CLEAR_COL;
     lightDir = -normalize(GLOBAL_LIGHT_DIR);

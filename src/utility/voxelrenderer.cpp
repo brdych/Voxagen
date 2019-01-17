@@ -72,6 +72,11 @@ void VoxelRenderer::FinishMesh()
     glEnableVertexAttribArray(1);
 }
 
+bool VoxelRenderer::ShouldRender()
+{
+    return (_indices->size() > 0);
+}
+
 void VoxelRenderer::Render(glm::mat4 mvp)
 {
     glUniformMatrix4fv(_VoxelShaderMatrixID, 1, GL_FALSE, &mvp[0][0]);

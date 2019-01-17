@@ -75,12 +75,15 @@ void InputController::ProcessInput(float deltaTime)
         camera->ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera->ProcessKeyboard(RIGHT, deltaTime);
+
+
     if(glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
     {
         if(!free_mouse && !alt_pressed)
         {
             alt_pressed = true;
             free_mouse = true;
+            VoxagenSettings::SettingsInstance()->MENU = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
         else if (free_mouse && !alt_pressed)

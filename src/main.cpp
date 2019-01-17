@@ -14,6 +14,7 @@ using namespace std;
 #include "utility/shader.hpp"
 #include "utility/chunkmanager.hpp"
 #include "utility/inputcontroller.hpp"
+#include "worldvariables.hpp"
 
 
 // settings
@@ -42,14 +43,13 @@ int main(void)
     cout << "Voxagen Started!" << endl;
     inputController->SetupControls(window, camera);
 
-    Shader light_shader("../src/shaders/LightShader.vert","../src/shaders/LightShader.frag");
-    GLint LightMatrixID = glGetUniformLocation(light_shader.ID, "MVP");
-
-    glm::mat4 proj = glm::perspective(glm::radians(50.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 1000.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(50.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 2000.0f);
     glm::mat4 model = glm::mat4(1);
     glm::mat4 view;
     glm::mat4 mvp;
 
+    Shader light_shader("../src/shaders/LightShader.vert","../src/shaders/LightShader.frag");
+    GLint LightMatrixID = glGetUniformLocation(light_shader.ID, "MVP");
     static const GLfloat light_vertices[] = {
         -0.5f,-0.5f,-0.5f, //BLB 0
         -0.5f,-0.5f, 0.5f, //BLF 1
@@ -92,13 +92,20 @@ int main(void)
     std::vector<Chunk*>* chunks = new std::vector<Chunk*>();
     for(int x = -10; x < 10; x++)
         for (int z = -10; z < 10; z++)
-            for(int y = 0; y < 2; y++)
+            for(int y = 1; y < 4; y++)
             {
                 Chunk* c = new Chunk(x,y,z);
                 c->BuildVoxelData();
                 c->BuildChunkMesh();
                 chunks->push_back(c);
             }
+
+    /*chunks->push_back(new Chunk(0,0,0));
+    for(Chunk* c: *chunks)
+    {
+        c->BuildVoxelData();
+        c->BuildChunkMesh();
+    }*/
 
 
     //std::thread t_ChunkManager(UpdateLoop);
@@ -137,15 +144,31 @@ int main(void)
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
         //Draw Chunks
-        VoxelRenderer::SetupShader();
         for(Chunk* c: *chunks)
         {
+            VoxelRenderer::SetupShader();
             c->Render(&view,&proj,&mvp);
+            if(settings->SHOW_CHUNK_BOUNDS || (settings->ONLY_RENDERING_CHUNKS && c->ShouldRender(0, nullptr, nullptr)))
+            {
+                light_shader.use();
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3((c->chunkX*Chunk::CHUNK_SIZE)-0.5,(c->chunkY*Chunk::CHUNK_SIZE)-0.5,(c->chunkZ*Chunk::CHUNK_SIZE)-0.5));
+                model = glm::translate(model, glm::vec3(Chunk::CHUNK_SIZE/2,Chunk::CHUNK_SIZE/2,Chunk::CHUNK_SIZE/2));
+                model = glm::scale(model, glm::vec3(Chunk::CHUNK_SIZE,Chunk::CHUNK_SIZE,Chunk::CHUNK_SIZE));
+                mvp = proj * view * model;
+                glUniformMatrix4fv(LightMatrixID, 1, GL_FALSE, &mvp[0][0]);
+                glBindVertexArray(lightVAO);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
+                glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
         }
 
         // Start the Dear ImGui frame
-        gui->drawControlPanel(camera);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        if(settings->MENU)
+        {
+            gui->drawControlPanel(camera);
+        }
 
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
@@ -156,4 +179,9 @@ int main(void)
     //t_ChunkManager.join();
     cout << "Shutting Down Voxagen!" << endl;
     return 0;
+}
+
+void SetupLightShader()
+{
+
 }

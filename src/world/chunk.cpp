@@ -9,7 +9,6 @@ Chunk::Chunk(int x, int y, int z) {
     chunkZ = z;
     _renderer = new VoxelRenderer();
     _chunkSize = 0;
-    BuildVoxelData();
 }
 
 Chunk::~Chunk() {
@@ -20,6 +19,8 @@ bool Chunk::ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos
 {
     if(_chunkSize < 1)
         return false;
+    if(!_renderer->ShouldRender())
+        return false;
     //glm::vec3 vector = glm::normalize(glm::vec3(chunkX*CHUNK_SIZE/2,chunkY*CHUNK_SIZE/2,chunkZ*CHUNK_SIZE/2)-*cameraPos);
     //if(abs(glm::acos(glm::dot(*cameraFront, vector))) > glm::radians(50.0f))
         //return false;
@@ -28,13 +29,13 @@ bool Chunk::ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos
 
 void Chunk::BuildVoxelData()
 {
-    //auto begin = std::chrono::high_resolution_clock::now();
+    auto begin = std::chrono::high_resolution_clock::now();
     ChunkManager* cm = ChunkManager::ChunkManagerInstance();
     int cx = chunkX*CHUNK_SIZE, cy = chunkY*CHUNK_SIZE, cz = chunkZ * CHUNK_SIZE;
-    //std::cout << "Generating Voxel Data" << std::endl;
-    for(uint x = 0; x < CHUNK_SIZE; x++)
-        for(uint z = 0; z < CHUNK_SIZE; z++)
-            for(uint y = 0; y < CHUNK_SIZE; y++)
+    std::cout << "Generating Voxel Data" << std::endl;
+    for(int x = 0; x < CHUNK_SIZE; x++)
+        for(int z = 0; z < CHUNK_SIZE; z++)
+            for(int y = 0; y < CHUNK_SIZE; y++)
             {
                 bool block;
                 block = voxeldata[x][y][z] = cm->GetBlockValue(x+cx,y+cy,z+cz);
@@ -42,29 +43,29 @@ void Chunk::BuildVoxelData()
                 //block = voxeldata[x][y][z] = true;
                 _chunkSize = (block) ? _chunkSize+1 : _chunkSize;
             }
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto dur = end - begin;
-    //auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
-    //std::cout << "Chunk Data("<<_chunkSize<<") For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl;
-    //std::cout << "Voxel Data Generated" << std::endl;
+    auto end = std::chrono::high_resolution_clock::now();
+    auto dur = end - begin;
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+    std::cout << "Chunk Data("<<_chunkSize<<") For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl;
+    std::cout << "Voxel Data Generated" << std::endl;
 }
 
 void Chunk::BuildChunkMesh()
 {
     if(_chunkSize > 0)
     {
-        //auto begin = std::chrono::high_resolution_clock::now();
-        //_renderer->StartMesh();
+        auto begin = std::chrono::high_resolution_clock::now();
+        _renderer->StartMesh();
         for(uint z = 0; z < CHUNK_SIZE; z++)
             for(uint y = 0; y < CHUNK_SIZE; y++)
                 for(uint x = 0; x < CHUNK_SIZE; x++)
                     if(voxeldata[x][y][z])
                         AddCube(x,y,z);
         _renderer->FinishMesh();
-        //auto end = std::chrono::high_resolution_clock::now();
-        //auto dur = end - begin;
-        //auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
-        //std::cout << "Chunk Mesh For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl;
+        auto end = std::chrono::high_resolution_clock::now();
+        auto dur = end - begin;
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+        std::cout << "Chunk Mesh For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl << std::endl;
     }
 }
 

@@ -19,6 +19,7 @@ public:
     void StartMesh();
     void FinishMesh();
     void Render(glm::mat4 mvp);
+    bool ShouldRender();
     static void SetupShader();
 
 private:

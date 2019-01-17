@@ -13,6 +13,9 @@ VoxagenSettings::VoxagenSettings()
     PROGRAM_SHOULD_EXIT =   false;
     CULLING_ENABLED =       true;
     Z_BUFFER_ENABLED =      true;
+    SHOW_CHUNK_BOUNDS =     false;
+    ONLY_RENDERING_CHUNKS = false;
+    MENU =                  false;
 }
 
 VoxagenSettings* VoxagenSettings::SettingsInstance()

@@ -35,6 +35,9 @@ void GuiManager::drawControlPanel(Camera* c) {
     ImGui::SameLine();
     ImGui::Checkbox("Wireframe",            &_settings->USE_WIREFRAME);
     ImGui::Separator();
+    ImGui::Checkbox("Show All Chunk Bounds",        &_settings->SHOW_CHUNK_BOUNDS);
+    ImGui::Checkbox("Show Rendered Chunk Bounds",   &_settings->ONLY_RENDERING_CHUNKS);
+    ImGui::Separator();
     ImGui::ColorEdit3("Clear Color",        (float*)_settings->CLEAR_COLOUR);
     ImGui::ColorEdit3("Global Light Color", (float*)_settings->GLOBAL_LIGHT_COL);
     ImGui::SliderFloat("Fog Density",       &_settings->FOG_INFO->z, 0, 0.05f);
@@ -51,8 +54,13 @@ void GuiManager::drawControlPanel(Camera* c) {
     if (ImGui::Button("Exit Voxagen")) {
         _settings->PROGRAM_SHOULD_EXIT = true;
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Hide Panel")) {
+        _settings->MENU = false;
+    }
 
     ImGui::End();
     ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
