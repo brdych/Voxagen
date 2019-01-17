@@ -1,5 +1,7 @@
 #include "loader.hpp"
 
+void FrameBufferSizeCallback(GLFWwindow* window, int width, int height);
+
 Loader::Loader()
 {
     //Initialize GLFW
@@ -15,7 +17,7 @@ Loader::~Loader()
     glfwTerminate();
 }
 
-GLFWwindow* Loader::loadGL(int width, int height)
+GLFWwindow* Loader::LoadGL(int width, int height)
 {
     window = glfwCreateWindow(width, height, "Voxagen", nullptr, nullptr);
     if (window == nullptr)
@@ -32,7 +34,18 @@ GLFWwindow* Loader::loadGL(int width, int height)
         cout << "Failed to initialize GLAD" << endl;
         return nullptr;
     }
+
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
+
     return window;
 }
+
+void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+
 
 

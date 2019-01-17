@@ -9,8 +9,8 @@ class WorldAttributes
 public:
     WorldAttributes();
     static std::map<int, glm::vec3> VOXEL_MATERIALS;
-    constexpr static const float BLOCK_SIZE = 0.5f;
-    static const uint CHUNK_SIZE = 16;
+    constexpr static const float BLOCK_SIZE = 0.5;
+    static const unsigned int CHUNK_SIZE = 16;
 };
 
 #endif // WORLDATTRIBUTES_H

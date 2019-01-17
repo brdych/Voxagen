@@ -12,7 +12,6 @@ class GuiManager {
 public:
     GuiManager();
     GuiManager(GLFWwindow* window);
-    GuiManager(GuiManager& orig);
     virtual ~GuiManager();
     void drawControlPanel(Camera* c);
     

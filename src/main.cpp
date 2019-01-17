@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdio.h>
+#include <thread>
 
 using namespace std;
 
@@ -12,31 +13,25 @@ using namespace std;
 #include "utility/voxagensettings.hpp"
 #include "utility/shader.hpp"
 #include "utility/chunkmanager.hpp"
+#include "utility/inputcontroller.hpp"
 
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
 
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
 VoxagenSettings* settings = VoxagenSettings::SettingsInstance();
-
 Loader* loader = new Loader();
-GLFWwindow* window = loader->loadGL(SCR_WIDTH, SCR_HEIGHT);
+GLFWwindow* window = loader->LoadGL(SCR_WIDTH, SCR_HEIGHT);
 GuiManager* gui = new GuiManager(window);
 Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 20.0f));
+InputController* inputController = InputController::GetInputControllerInstance();
+ChunkManager* chunkManager = ChunkManager::ChunkManagerInstance();
 
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-bool free_mouse = false;
-bool alt_pressed = false;
+
+void processInput(GLFWwindow *window);
 
 float RandomFloat(float a, float b) {
     return a + ((((float) rand()) / (float) RAND_MAX) * (b - a));
@@ -44,20 +39,8 @@ float RandomFloat(float a, float b) {
 
 int main(void)
 {
-    cout << "Hello world!" << endl;
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    VoxagenSettings*vs = VoxagenSettings::SettingsInstance();
-    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
-    cm->CreateChunks();
-    cm->BuildMeshes();
-
-    Shader block_shader("../src/shaders/BlockShader.vert","../src/shaders/BlockShader.frag");
-    GLint MatrixID = glGetUniformLocation(block_shader.ID, "MVP");
+    cout << "Voxagen Started!" << endl;
+    inputController->SetupControls(window, camera);
 
     Shader light_shader("../src/shaders/LightShader.vert","../src/shaders/LightShader.frag");
     GLint LightMatrixID = glGetUniformLocation(light_shader.ID, "MVP");
@@ -106,6 +89,19 @@ int main(void)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
+    std::vector<Chunk*>* chunks = new std::vector<Chunk*>();
+    for(int x = -10; x < 10; x++)
+        for (int z = -10; z < 10; z++)
+            for(int y = 0; y < 2; y++)
+            {
+                Chunk* c = new Chunk(x,y,z);
+                c->BuildVoxelData();
+                c->BuildChunkMesh();
+                chunks->push_back(c);
+            }
+
+
+    //std::thread t_ChunkManager(UpdateLoop);
 
     while(!glfwWindowShouldClose(window)&&!settings->PROGRAM_SHOULD_EXIT)
     {
@@ -113,7 +109,8 @@ int main(void)
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        processInput(window);
+
+        inputController->ProcessInput(deltaTime);
 
         glm::vec4* clear_color = settings->CLEAR_COLOUR;
         glClearColor(clear_color->x, clear_color->y, clear_color->z, clear_color->w);
@@ -139,26 +136,12 @@ int main(void)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
-
         //Draw Chunks
-        block_shader.use();
-        block_shader.setVec3("GLOBAL_LIGHT_COL", *settings->GLOBAL_LIGHT_COL);
-        block_shader.setVec3("GLOBAL_LIGHT_DIR", *settings->GLOBAL_LIGHT_DIR);
-        block_shader.setVec3("CLEAR_COL", *settings->CLEAR_COLOUR);
-        block_shader.setVec3("FOG_INFO", *settings->FOG_INFO);
-
-        for(uint x = 0; x < cm->num_chunks_X; x++)
-            for(uint y = 0; y < cm->num_chunks_Y; y++)
-                for(uint z = 0; z < cm->num_chunks_Z; z++)
-                {
-                    if(cm->chunks[x][y][z]->ShouldRender(50.0f, &camera->Front, &camera->Position))
-                    {
-                        model = glm::translate(glm::mat4(1), glm::vec3(x*Chunk::CHUNK_SIZE,y*Chunk::CHUNK_SIZE,z*Chunk::CHUNK_SIZE));
-                        mvp = proj * view * model;
-                        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-                        cm->chunks[x][y][z]->Render();
-                    }
-                }
+        VoxelRenderer::SetupShader();
+        for(Chunk* c: *chunks)
+        {
+            c->Render(&view,&proj,&mvp);
+        }
 
         // Start the Dear ImGui frame
         gui->drawControlPanel(camera);
@@ -169,80 +152,8 @@ int main(void)
         glfwPollEvents();
     }
 
-    cout << "Goodbye world!" << endl;
+    chunkManager->Shutdown = true;
+    //t_ChunkManager.join();
+    cout << "Shutting Down Voxagen!" << endl;
     return 0;
-}
-
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera->ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera->ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera->ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera->ProcessKeyboard(RIGHT, deltaTime);
-    if(glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
-    {
-        if(!free_mouse && !alt_pressed)
-        {
-            alt_pressed = true;
-            free_mouse = true;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        }
-        else if (free_mouse && !alt_pressed)
-        {
-            free_mouse = false;
-            alt_pressed = true;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        }
-    }
-    if(glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE)
-    {
-        alt_pressed = false;
-    }
-    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-    {
-        camera->SpeedToggle = true;
-    }
-    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
-    {
-        camera->SpeedToggle = false;
-    }
-
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    if(!free_mouse)
-    {
-        if (firstMouse)
-        {
-            lastX = xpos;
-            lastY = ypos;
-            firstMouse = false;
-        }
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos;
-        lastX = xpos;
-        lastY = ypos;
-        camera->ProcessMouseMovement(xoffset, yoffset);
-    }
-    else
-    {
-        firstMouse = true;
-    }
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    camera->ProcessMouseScroll(xoffset);
 }

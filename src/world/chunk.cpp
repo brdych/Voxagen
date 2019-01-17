@@ -1,11 +1,14 @@
 #include "chunk.hpp"
 #include "utility/chunkmanager.hpp"
 #include "glm/glm.hpp"
+#include "chrono"
 
 Chunk::Chunk(int x, int y, int z) {
     chunkX = x;
     chunkY = y;
     chunkZ = z;
+    _renderer = new VoxelRenderer();
+    _chunkSize = 0;
     BuildVoxelData();
 }
 
@@ -15,18 +18,17 @@ Chunk::~Chunk() {
 
 bool Chunk::ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos)
 {
-    if(_cvs->size() < 1)
+    if(_chunkSize < 1)
         return false;
-
     //glm::vec3 vector = glm::normalize(glm::vec3(chunkX*CHUNK_SIZE/2,chunkY*CHUNK_SIZE/2,chunkZ*CHUNK_SIZE/2)-*cameraPos);
     //if(abs(glm::acos(glm::dot(*cameraFront, vector))) > glm::radians(50.0f))
         //return false;
-
     return true;
 }
 
 void Chunk::BuildVoxelData()
 {
+    //auto begin = std::chrono::high_resolution_clock::now();
     ChunkManager* cm = ChunkManager::ChunkManagerInstance();
     int cx = chunkX*CHUNK_SIZE, cy = chunkY*CHUNK_SIZE, cz = chunkZ * CHUNK_SIZE;
     //std::cout << "Generating Voxel Data" << std::endl;
@@ -34,51 +36,50 @@ void Chunk::BuildVoxelData()
         for(uint z = 0; z < CHUNK_SIZE; z++)
             for(uint y = 0; y < CHUNK_SIZE; y++)
             {
-                //voxeldata[x][y][z] = (rand() < (RAND_MAX/2));
-                //voxeldata[x][y][z] = true;
-                voxeldata[x][y][z] = cm->GetBlockValue(x+cx,y+cy,z+cz);
+                bool block;
+                block = voxeldata[x][y][z] = cm->GetBlockValue(x+cx,y+cy,z+cz);
+                //block = voxeldata[x][y][z] = (rand() < (RAND_MAX/2));
+                //block = voxeldata[x][y][z] = true;
+                _chunkSize = (block) ? _chunkSize+1 : _chunkSize;
             }
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto dur = end - begin;
+    //auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+    //std::cout << "Chunk Data("<<_chunkSize<<") For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl;
     //std::cout << "Voxel Data Generated" << std::endl;
 }
 
 void Chunk::BuildChunkMesh()
 {
-    //std::cout << "Building Chunk Mesh" << std::endl;
-    for(uint z = 0; z < CHUNK_SIZE; z++)
-        for(uint y = 0; y < CHUNK_SIZE; y++)
-            for(uint x = 0; x < CHUNK_SIZE; x++)
-                if(voxeldata[x][y][z])
-                    AddCube(x,y,z);
-
-    //std::cout << _cvs->size() << std::endl;
-
-    //VAO
-    glGenVertexArrays(1, &_chunkVAO);
-    glBindVertexArray(_chunkVAO);
-    //VBO
-    glGenBuffers(1, &_chunkVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, _chunkVBO);
-    glBufferData(GL_ARRAY_BUFFER, _cvs->size()*sizeof(GLfloat), _cvs->data(), GL_STATIC_DRAW);
-    //VAO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    //std::cout << "Built Chunk Mesh" << std::endl;
+    if(_chunkSize > 0)
+    {
+        //auto begin = std::chrono::high_resolution_clock::now();
+        //_renderer->StartMesh();
+        for(uint z = 0; z < CHUNK_SIZE; z++)
+            for(uint y = 0; y < CHUNK_SIZE; y++)
+                for(uint x = 0; x < CHUNK_SIZE; x++)
+                    if(voxeldata[x][y][z])
+                        AddCube(x,y,z);
+        _renderer->FinishMesh();
+        //auto end = std::chrono::high_resolution_clock::now();
+        //auto dur = end - begin;
+        //auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+        //std::cout << "Chunk Mesh For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl;
+    }
 }
 
-void Chunk::Render()
+void Chunk::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
 {
-    glBindVertexArray(_chunkVAO);
-    glDrawArrays(GL_TRIANGLES, 0, _cvs->size()/3);
+    if(_chunkSize > 0)
+    {
+        *mvp = (*proj) * (*view) * glm::translate(glm::mat4(1), glm::vec3(chunkX*Chunk::CHUNK_SIZE,chunkY*Chunk::CHUNK_SIZE,chunkZ*Chunk::CHUNK_SIZE));
+        _renderer->Render(*mvp);
+    }
 }
 
 void Chunk::AddCube(uint x, uint y, uint z)
 {
     ChunkManager* cm = ChunkManager::ChunkManagerInstance();
-    bool adjacent_block = true;
 
     //std::cout << "AddCube: " << x << " " << y << " " << z <<std::endl;
 
@@ -92,214 +93,86 @@ void Chunk::AddCube(uint x, uint y, uint z)
     glm::vec3 v6 = glm::vec3(x+voxel_size,y+voxel_size,z-voxel_size);
     glm::vec3 v7 = glm::vec3(x+voxel_size,y+voxel_size,z+voxel_size);
 
+    //std::cout << "Init" <<std::endl;
+
     //Top
-    adjacent_block = (y!=CHUNK_SIZE-1) ? voxeldata[x][y+1][z] : cm->BlockExistsInChunk(x,0,z, chunkX,chunkY+1,chunkZ);
-    if(!adjacent_block)
+    if(! ((y!=CHUNK_SIZE-1) ? voxeldata[x][y+1][z] : cm->BlockExistsInChunk(x,0,z, chunkX,chunkY+1,chunkZ)) )
     {
-        _cvs->push_back(v4.x);
-        _cvs->push_back(v4.y);
-        _cvs->push_back(v4.z);
-        _cvs->push_back(0);
+        GLuint p1 = _renderer->AddVertex(v4,0,glm::vec3(0));
+        GLuint p2 = _renderer->AddVertex(v7,0,glm::vec3(0));
+        GLuint p3 = _renderer->AddVertex(v6,0,glm::vec3(0));
 
-        _cvs->push_back(v7.x);
-        _cvs->push_back(v7.y);
-        _cvs->push_back(v7.z);
-        _cvs->push_back(0);
+        GLuint p4 = _renderer->AddVertex(v4,0,glm::vec3(0));
+        GLuint p5 = _renderer->AddVertex(v5,0,glm::vec3(0));
+        GLuint p6 = _renderer->AddVertex(v7,0,glm::vec3(0));
 
-        _cvs->push_back(v6.x);
-        _cvs->push_back(v6.y);
-        _cvs->push_back(v6.z);
-        _cvs->push_back(0);
-
-        _cvs->push_back(v4.x);
-        _cvs->push_back(v4.y);
-        _cvs->push_back(v4.z);
-        _cvs->push_back(0);
-
-        _cvs->push_back(v5.x);
-        _cvs->push_back(v5.y);
-        _cvs->push_back(v5.z);
-        _cvs->push_back(0);
-
-        _cvs->push_back(v7.x);
-        _cvs->push_back(v7.y);
-        _cvs->push_back(v7.z);
-        _cvs->push_back(0);
+        _renderer->AddTriangle(p1,p2,p3);
+        _renderer->AddTriangle(p4,p5,p6);
     }
+    //std::cout << "Top" <<std::endl;
 
     //Bottom
-    adjacent_block = (y!=0) ? voxeldata[x][y-1][z] : cm->BlockExistsInChunk(x,CHUNK_SIZE-1,z, chunkX,chunkY-1,chunkZ);
-    if(!adjacent_block)
+    if(! ((y!=0) ? voxeldata[x][y-1][z] : cm->BlockExistsInChunk(x,CHUNK_SIZE-1,z, chunkX,chunkY-1,chunkZ)))
     {
-        _cvs->push_back(v1.x);
-        _cvs->push_back(v1.y);
-        _cvs->push_back(v1.z);
-        _cvs->push_back(1);
+        GLuint p1 = _renderer->AddVertex(v1,1,glm::vec3(0));
+        GLuint p2 = _renderer->AddVertex(v2,1,glm::vec3(0));
+        GLuint p3 = _renderer->AddVertex(v3,1,glm::vec3(0));
+        GLuint p4 = _renderer->AddVertex(v0,1,glm::vec3(0));
 
-        _cvs->push_back(v2.x);
-        _cvs->push_back(v2.y);
-        _cvs->push_back(v2.z);
-        _cvs->push_back(1);
-
-        _cvs->push_back(v3.x);
-        _cvs->push_back(v3.y);
-        _cvs->push_back(v3.z);
-        _cvs->push_back(1);
-
-        _cvs->push_back(v1.x);
-        _cvs->push_back(v1.y);
-        _cvs->push_back(v1.z);
-        _cvs->push_back(1);
-
-        _cvs->push_back(v0.x);
-        _cvs->push_back(v0.y);
-        _cvs->push_back(v0.z);
-        _cvs->push_back(1);
-
-        _cvs->push_back(v2.x);
-        _cvs->push_back(v2.y);
-        _cvs->push_back(v2.z);
-        _cvs->push_back(1);
+        _renderer->AddTriangle(p1,p2,p3);
+        _renderer->AddTriangle(p1,p4,p2);
     }
+    //std::cout << "Bottom" <<std::endl;
 
     //Right
-    adjacent_block = (x!=CHUNK_SIZE-1) ? voxeldata[x+1][y][z] : cm->BlockExistsInChunk(0,y,z, chunkX+1,chunkY,chunkZ);
-    if(!adjacent_block)
+    if(! ((x!=CHUNK_SIZE-1) ? voxeldata[x+1][y][z] : cm->BlockExistsInChunk(0,y,z, chunkX+1,chunkY,chunkZ)))
     {
-        _cvs->push_back(v7.x);
-        _cvs->push_back(v7.y);
-        _cvs->push_back(v7.z);
-        _cvs->push_back(2);
+        GLuint p1 = _renderer->AddVertex(v7,2,glm::vec3(0));
+        GLuint p2 = _renderer->AddVertex(v2,2,glm::vec3(0));
+        GLuint p3 = _renderer->AddVertex(v6,2,glm::vec3(0));
+        GLuint p4 = _renderer->AddVertex(v3,2,glm::vec3(0));
 
-        _cvs->push_back(v2.x);
-        _cvs->push_back(v2.y);
-        _cvs->push_back(v2.z);
-        _cvs->push_back(2);
-
-        _cvs->push_back(v6.x);
-        _cvs->push_back(v6.y);
-        _cvs->push_back(v6.z);
-        _cvs->push_back(2);
-
-        _cvs->push_back(v7.x);
-        _cvs->push_back(v7.y);
-        _cvs->push_back(v7.z);
-        _cvs->push_back(2);
-
-        _cvs->push_back(v3.x);
-        _cvs->push_back(v3.y);
-        _cvs->push_back(v3.z);
-        _cvs->push_back(2);
-
-        _cvs->push_back(v2.x);
-        _cvs->push_back(v2.y);
-        _cvs->push_back(v2.z);
-        _cvs->push_back(2);
+        _renderer->AddTriangle(p1,p2,p3);
+        _renderer->AddTriangle(p1,p4,p2);
     }
+    //std::cout << "Right" <<std::endl;
 
     //Left
-    adjacent_block = (x!=0) ? voxeldata[x-1][y][z] : cm->BlockExistsInChunk(CHUNK_SIZE-1,y,z, chunkX-1,chunkY,chunkZ);
-    if(!adjacent_block)
+    if(! ((x!=0) ? voxeldata[x-1][y][z] : cm->BlockExistsInChunk(CHUNK_SIZE-1,y,z, chunkX-1,chunkY,chunkZ)))
     {
-        _cvs->push_back(v4.x);
-        _cvs->push_back(v4.y);
-        _cvs->push_back(v4.z);
-        _cvs->push_back(3);
+        GLuint p1 = _renderer->AddVertex(v4,3,glm::vec3(0));
+        GLuint p2 = _renderer->AddVertex(v1,3,glm::vec3(0));
+        GLuint p3 = _renderer->AddVertex(v5,3,glm::vec3(0));
+        GLuint p4 = _renderer->AddVertex(v0,3,glm::vec3(0));
 
-        _cvs->push_back(v1.x);
-        _cvs->push_back(v1.y);
-        _cvs->push_back(v1.z);
-        _cvs->push_back(3);
-
-        _cvs->push_back(v5.x);
-        _cvs->push_back(v5.y);
-        _cvs->push_back(v5.z);
-        _cvs->push_back(3);
-
-        _cvs->push_back(v4.x);
-        _cvs->push_back(v4.y);
-        _cvs->push_back(v4.z);
-        _cvs->push_back(3);
-
-        _cvs->push_back(v0.x);
-        _cvs->push_back(v0.y);
-        _cvs->push_back(v0.z);
-        _cvs->push_back(3);
-
-        _cvs->push_back(v1.x);
-        _cvs->push_back(v1.y);
-        _cvs->push_back(v1.z);
-        _cvs->push_back(3);
+        _renderer->AddTriangle(p1,p2,p3);
+        _renderer->AddTriangle(p1,p4,p2);
     }
+    //std::cout << "Left" <<std::endl;
 
     //Front
-    adjacent_block = (z!=CHUNK_SIZE-1) ? voxeldata[x][y][z+1] : cm->BlockExistsInChunk(x,y,0, chunkX,chunkY,chunkZ+1);
-    if(!adjacent_block)
+    if(! ((z!=CHUNK_SIZE-1) ? voxeldata[x][y][z+1] : cm->BlockExistsInChunk(x,y,0, chunkX,chunkY,chunkZ+1)))
     {
-        _cvs->push_back(v5.x);
-        _cvs->push_back(v5.y);
-        _cvs->push_back(v5.z);
-        _cvs->push_back(4);
+        GLuint p1 = _renderer->AddVertex(v5,4,glm::vec3(0));
+        GLuint p2 = _renderer->AddVertex(v3,4,glm::vec3(0));
+        GLuint p3 = _renderer->AddVertex(v7,4,glm::vec3(0));
+        GLuint p4 = _renderer->AddVertex(v1,4,glm::vec3(0));
 
-        _cvs->push_back(v3.x);
-        _cvs->push_back(v3.y);
-        _cvs->push_back(v3.z);
-        _cvs->push_back(4);
-
-        _cvs->push_back(v7.x);
-        _cvs->push_back(v7.y);
-        _cvs->push_back(v7.z);
-        _cvs->push_back(4);
-
-        _cvs->push_back(v5.x);
-        _cvs->push_back(v5.y);
-        _cvs->push_back(v5.z);
-        _cvs->push_back(4);
-
-        _cvs->push_back(v1.x);
-        _cvs->push_back(v1.y);
-        _cvs->push_back(v1.z);
-        _cvs->push_back(4);
-
-        _cvs->push_back(v3.x);
-        _cvs->push_back(v3.y);
-        _cvs->push_back(v3.z);
-        _cvs->push_back(4);
+        _renderer->AddTriangle(p1,p2,p3);
+        _renderer->AddTriangle(p1,p4,p2);
     }
+    //std::cout << "Front" <<std::endl;
 
     //Back
-    adjacent_block = (z!=0) ? voxeldata[x][y][z-1] : cm->BlockExistsInChunk(x,y,CHUNK_SIZE-1, chunkX,chunkY,chunkZ-1);
-    if(!adjacent_block)
+    if(! ((z!=0) ? voxeldata[x][y][z-1] : cm->BlockExistsInChunk(x,y,CHUNK_SIZE-1, chunkX,chunkY,chunkZ-1)))
     {
-        _cvs->push_back(v6.x);
-        _cvs->push_back(v6.y);
-        _cvs->push_back(v6.z);
-        _cvs->push_back(5);
+        GLuint p1 = _renderer->AddVertex(v6,5,glm::vec3(0));
+        GLuint p2 = _renderer->AddVertex(v0,5,glm::vec3(0));
+        GLuint p3 = _renderer->AddVertex(v4,5,glm::vec3(0));
+        GLuint p4 = _renderer->AddVertex(v2,5,glm::vec3(0));
 
-        _cvs->push_back(v0.x);
-        _cvs->push_back(v0.y);
-        _cvs->push_back(v0.z);
-        _cvs->push_back(5);
-
-        _cvs->push_back(v4.x);
-        _cvs->push_back(v4.y);
-        _cvs->push_back(v4.z);
-        _cvs->push_back(5);
-
-        _cvs->push_back(v6.x);
-        _cvs->push_back(v6.y);
-        _cvs->push_back(v6.z);
-        _cvs->push_back(5);
-
-        _cvs->push_back(v2.x);
-        _cvs->push_back(v2.y);
-        _cvs->push_back(v2.z);
-        _cvs->push_back(5);
-
-        _cvs->push_back(v0.x);
-        _cvs->push_back(v0.y);
-        _cvs->push_back(v0.z);
-        _cvs->push_back(5);
+        _renderer->AddTriangle(p1,p2,p3);
+        _renderer->AddTriangle(p1,p4,p2);
     }
+    //std::cout << "Back" <<std::endl;
 }
-

@@ -12,18 +12,22 @@ class Chunk {
 public:
 
     //Variables
-    static const int CHUNK_SIZE = 32;
+    static const int CHUNK_SIZE = 64;
     int chunkX;
     int chunkY;
     int chunkZ;
     bool voxeldata[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
+
+    bool isSetup = false;
+    bool needsRenderUpdate = false;
+    bool needsRebuildUpdate = false;
 
 
     //Methods
     void BuildVoxelData();
     void BuildChunkMesh();
     void AddCube(uint x, uint y, uint z);
-    void Render();
+    void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
     bool ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos);
 
     //Constructor and Destructor
@@ -33,9 +37,7 @@ public:
 private:
 
     //Variables
-    VoxelRenderer _renderer;
-    std::vector<GLfloat>* _cvs = new std::vector<GLfloat>();
-    GLuint _chunkVAO;
-    GLuint _chunkVBO;
+    VoxelRenderer* _renderer;
+    unsigned int _chunkSize;
 };
 #endif // CHUNK_HPP

@@ -3,38 +3,33 @@
 
 #include <vector>
 #include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <utility/shader.hpp>
+#include <utility/voxagensettings.hpp>
 
 
 class VoxelRenderer
 {
 public:
     VoxelRenderer();
-    GLuint AddVertex(glm::vec3 p, glm::vec3 n, glm::vec3 c);
-    void Addtriangle(GLuint v1, GLuint v2, GLuint v3);
+    GLuint AddVertex(glm::vec3 p, GLfloat n, glm::vec3 c);
+    void AddTriangle(GLuint v1, GLuint v2, GLuint v3);
     void StartMesh();
     void FinishMesh();
-    void Render();
+    void Render(glm::mat4 mvp);
+    static void SetupShader();
 
 private:
-    struct VertexInfo
-    {
-        GLfloat px, py, pz, nx, ny, nz, r, g, b;
-        /*bool operator==(const VertexInfo& other)
-        {
-            return  px==other.px && py==other.py && pz==other.pz &&
-                    nx==other.nx && ny==other.ny && nz==other.nz &&
-                    r==other.r && g==other.g && b==other.b ? true : false;
-        }*/
-    };
-    const static GLfloat voxel_size;
-
+    static Shader* _VoxelShader;
+    static VoxagenSettings* _Settings;
+    static GLint _VoxelShaderMatrixID;
     GLuint vertex_count = 0;
     GLuint index_count = 0;
-    std::vector<VertexInfo> vertices;
-    std::vector<GLuint> indices;
-
+    GLuint _chunkVAO, _chunkVBO, _chunkEBO;
+    std::vector<GLfloat>* _vertices;
+    std::vector<GLuint>* _indices;
 };
 
 #endif // VOXELRENDERER_H

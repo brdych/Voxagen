@@ -14,8 +14,7 @@ class Loader
 public:
     Loader();
     ~Loader();
-    GLFWwindow* loadGL(int width, int height);
-
+    GLFWwindow* LoadGL(int width, int height);
 
 private:
     GLFWwindow* window;

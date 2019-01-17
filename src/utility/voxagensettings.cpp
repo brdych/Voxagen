@@ -17,10 +17,8 @@ VoxagenSettings::VoxagenSettings()
 
 VoxagenSettings* VoxagenSettings::SettingsInstance()
 {
-    //std::cout << "Request: VoxagenSettings Instance" << std::endl;
     if(_instance == nullptr)
     {
-        std::cout << "- Creating New VoxagenSettings Instance" << std::endl;
         _instance = new VoxagenSettings();
     }
     return _instance;
