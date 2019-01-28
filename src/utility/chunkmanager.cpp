@@ -2,10 +2,82 @@
 #include "math.h"
 
 ChunkManager* ChunkManager::_instance;
+bool ChunkManager::SHUTDOWN = false;
+
+void UpdateLoadList()
+{
+    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
+    while(!ChunkManager::SHUTDOWN)
+    {
+        if(cm->ChunkLoadList->size() > 0)
+        {
+            cm->ChunkLoadMutex.lock();
+            //std::cout <<"Mutex Locked by Loader: Size:"<< cm->ChunkLoadList->size() << std::endl;
+            Chunk* c = cm->ChunkLoadList->back();
+            cm->ChunkLoadList->pop_back();
+            //std::cout <<"Mutex Unlock by Loader: Size:"<< cm->ChunkLoadList->size() << std::endl;
+            cm->ChunkLoadMutex.unlock();
+
+            c->BuildVoxelData();
+            if(c->ShouldMesh())
+            {
+                cm->ChunkSetupMutex.lock();
+                cm->ChunkSetupList->push_back(c);
+                cm->ChunkSetupMutex.unlock();
+            }
+        }
+    }
+    std::cout << "Goodbye from UpdateLoadList Thread!" << std::endl;
+}
+
+void UpdateSetupList()
+{
+    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
+    while(!ChunkManager::SHUTDOWN)
+    {
+        if(cm->ChunkSetupList->size() > 0)
+        {
+            cm->ChunkSetupMutex.lock();
+            //std::cout <<"Mutex Locked by Mesher: Size:"<< cm->ChunkSetupList->size() << std::endl;
+            Chunk*c = cm->ChunkSetupList->back();
+            cm->ChunkSetupList->pop_back();
+            //std::cout <<"Mutex Unlocked by Mesher: Size:"<< cm->ChunkSetupList->size() << std::endl;
+            cm->ChunkSetupMutex.unlock();
+
+            c->BuildChunkMesh();
+
+            if(c->ShouldRender(0, new glm::vec3(), new glm::vec3()))
+            {
+                cm->ChunkRenderMutex.lock();
+                cm->ChunkRenderList->push_back(c);
+                cm->ChunkRenderMutex.unlock();
+            }
+        }
+    }
+    std::cout << "Goodbye from UpdateSetupList Thread!" << std::endl;
+}
 
 ChunkManager::ChunkManager()
 {
-    _ChunkRenderList = new std::vector<Chunk*>();
+    ChunkLoadList = new std::vector<Chunk*>();
+    ChunkSetupList = new std::vector<Chunk*>();
+    ChunkVisibleList = new std::vector<Chunk*>();
+    ChunkRenderList = new std::vector<Chunk*>();
+    ChunkUnloadList = new std::vector<Chunk*>();
+    _Debug = new DebugObject();
+}
+
+void ChunkManager::Start()
+{
+    _T_LoadList = new std::thread(UpdateLoadList);
+    _T_SetupList = new std::thread(UpdateSetupList);
+}
+
+void ChunkManager::Shutdown()
+{
+    ChunkManager::SHUTDOWN = true;
+    _T_LoadList->join();
+    _T_SetupList->join();
 }
 
 void ChunkManager::Update(Camera* camera, GLuint distance)
@@ -20,20 +92,14 @@ void ChunkManager::Update(Camera* camera, GLuint distance)
 }
 
 
-void ChunkManager::RequestChunks(Camera* camera, GLuint distance)
+void ChunkManager::RequestChunks()
 {
-    /*if(_ChunksLoaded < 10)
-    {
-        int chunkX = floor(camera->Position.x)/Chunk::CHUNK_SIZE;
-        int chunkZ = floor(camera->Position.z)/Chunk::CHUNK_SIZE;
-        int chunkY = floor(camera->Position.y)/Chunk::CHUNK_SIZE;
-
-        for(int x = chunkX-distance; x<chunkX+distance; x++)
-            for(int z = chunkZ-distance; z< chunkZ+distance; z++)
-                for(int y = chunkY-distance; y < chunkY+distance; y++)
-                    _ChunkLoadList->push_back(new Chunk(x,y,z));
-    }
-    _ChunksLoaded = 10;*/
+    ChunkLoadMutex.lock();
+    for(int x = -10; x < 10; x++)
+        for (int z = -10; z < 10; z++)
+            for(int y = 1; y < 4; y++)
+                ChunkLoadList->push_back(new Chunk(x,y,z));
+    ChunkLoadMutex.unlock();
 }
 
 
@@ -49,15 +115,28 @@ ChunkManager* ChunkManager::ChunkManagerInstance()
 
 void ChunkManager::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
 {
-    for(Chunk* c : *_ChunkRenderList)
+    VoxelRenderer::SetupShader();
+    ChunkRenderMutex.lock();
+    for(Chunk*c: *ChunkRenderList)
     {
         c->Render(view, proj, mvp);
     }
+
+    for(Chunk*c: *ChunkRenderList)
+    {
+        if(WorldVariables::SHOW_CHUNK_BOUNDS)
+        {
+            _Debug->DrawDebugChunk(c->chunkX, c->chunkY, c->chunkZ, *proj, *view);
+        }
+    }
+
+    ChunkRenderMutex.unlock();
 }
 
 bool ChunkManager::BlockExistsInChunk(int x, int y, int z, int cx, int cy, int cz)
 {
     return GetBlockValue((cx*Chunk::CHUNK_SIZE)+x, (cy*Chunk::CHUNK_SIZE)+y, (cz*Chunk::CHUNK_SIZE)+z);
+    //return false;
 }
 
 

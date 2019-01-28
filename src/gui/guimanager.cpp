@@ -29,34 +29,33 @@ void GuiManager::drawControlPanel(Camera* c) {
     ImGui::Begin("Voxagen Control Panel");
     ImGui::Checkbox("Demo Window",          &show_demo_window);
     ImGui::Separator();
-    ImGui::Checkbox("GL Culling",           &_settings->CULLING_ENABLED);
+    ImGui::Checkbox("GL Culling",           &WorldVariables::CULLING_ENABLED);
     ImGui::SameLine();
-    ImGui::Checkbox("GL Depth Buffer",      &_settings->Z_BUFFER_ENABLED);
+    ImGui::Checkbox("GL Depth Buffer",      &WorldVariables::Z_BUFFER_ENABLED);
     ImGui::SameLine();
-    ImGui::Checkbox("Wireframe",            &_settings->USE_WIREFRAME);
+    ImGui::Checkbox("Wireframe",            &WorldVariables::USE_WIREFRAME);
     ImGui::Separator();
-    ImGui::Checkbox("Show All Chunk Bounds",        &_settings->SHOW_CHUNK_BOUNDS);
-    ImGui::Checkbox("Show Rendered Chunk Bounds",   &_settings->ONLY_RENDERING_CHUNKS);
+    ImGui::Checkbox("Show Chunk Bounds",        &WorldVariables::SHOW_CHUNK_BOUNDS);
     ImGui::Separator();
-    ImGui::ColorEdit3("Clear Color",        (float*)_settings->CLEAR_COLOUR);
-    ImGui::ColorEdit3("Global Light Color", (float*)_settings->GLOBAL_LIGHT_COL);
-    ImGui::SliderFloat("Fog Density",       &_settings->FOG_INFO->z, 0, 0.05f);
+    ImGui::ColorEdit3("Clear Color",        (float*)WorldVariables::CLEAR_COLOUR);
+    ImGui::ColorEdit3("Global Light Color", (float*)WorldVariables::GLOBAL_LIGHT_COL);
+    ImGui::SliderFloat("Fog Density",       &WorldVariables::FOG_INFO->z, 0, 0.05f);
     ImGui::Separator();
     ImGui::Text("Camera Location: x:%.3f y:%.3f z:%.3f",c->Position.x,c->Position.y,c->Position.z);
     ImGui::Separator();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::Separator();
     if (ImGui::Button("Update Light Pos")) {
-        _settings->LIGHT_POS = new glm::vec3(c->Position);
-        _settings->GLOBAL_LIGHT_DIR = new glm::vec3(c->Front);
+        WorldVariables::LIGHT_POS = new glm::vec3(c->Position);
+        WorldVariables::GLOBAL_LIGHT_DIR = new glm::vec3(c->Front);
     }
     ImGui::SameLine();
     if (ImGui::Button("Exit Voxagen")) {
-        _settings->PROGRAM_SHOULD_EXIT = true;
+        WorldVariables::PROGRAM_SHOULD_EXIT = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("Hide Panel")) {
-        _settings->MENU = false;
+        WorldVariables::MENU = false;
     }
 
     ImGui::End();

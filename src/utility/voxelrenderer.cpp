@@ -3,15 +3,21 @@
 
 Shader* VoxelRenderer::_VoxelShader;
 GLint VoxelRenderer::_VoxelShaderMatrixID;
-VoxagenSettings* VoxelRenderer::_Settings;
 
 void VoxelRenderer::SetupShader()
 {
     _VoxelShader->use();
-    _VoxelShader->setVec3("GLOBAL_LIGHT_COL",    *_Settings->GLOBAL_LIGHT_COL);
-    _VoxelShader->setVec3("GLOBAL_LIGHT_DIR",    *_Settings->GLOBAL_LIGHT_DIR);
-    _VoxelShader->setVec3("CLEAR_COL",           *_Settings->CLEAR_COLOUR);
-    _VoxelShader->setVec3("FOG_INFO",            *_Settings->FOG_INFO);
+    _VoxelShader->setVec3("GLOBAL_LIGHT_COL",    *WorldVariables::GLOBAL_LIGHT_COL);
+    _VoxelShader->setVec3("GLOBAL_LIGHT_DIR",    *WorldVariables::GLOBAL_LIGHT_DIR);
+    _VoxelShader->setVec3("CLEAR_COL",           *WorldVariables::CLEAR_COLOUR);
+    _VoxelShader->setVec3("FOG_INFO",            *WorldVariables::FOG_INFO);
+
+    if(WorldVariables::CULLING_ENABLED) { glEnable(GL_CULL_FACE); }
+    else { glDisable(GL_CULL_FACE); }
+    if(WorldVariables::Z_BUFFER_ENABLED) { glEnable(GL_DEPTH_TEST); }
+    else { glDisable(GL_DEPTH_TEST); }
+    if(WorldVariables::USE_WIREFRAME) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
+    else { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 }
 
 VoxelRenderer::VoxelRenderer()
@@ -22,7 +28,6 @@ VoxelRenderer::VoxelRenderer()
     {
         _VoxelShader = new Shader("../src/shaders/BlockShader.vert","../src/shaders/BlockShader.frag");
         _VoxelShaderMatrixID = glGetUniformLocation(_VoxelShader->ID, "MVP");
-        _Settings = VoxagenSettings::SettingsInstance();
     }
 }
 
@@ -79,6 +84,11 @@ bool VoxelRenderer::ShouldRender()
 
 void VoxelRenderer::Render(glm::mat4 mvp)
 {
+    if(!meshFinished)
+    {
+        meshFinished = true;
+        FinishMesh();
+    }
     glUniformMatrix4fv(_VoxelShaderMatrixID, 1, GL_FALSE, &mvp[0][0]);
     glBindVertexArray(_chunkVAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _chunkEBO);

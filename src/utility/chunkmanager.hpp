@@ -2,10 +2,15 @@
 #define CHUNKMANAGER_HPP
 
 #include <vector>
+#include <mutex>
+#include <thread>
+
 #include "world/chunk.hpp"
 #include "camera.hpp"
 #include "perlinnoise.hpp"
 #include "utility/voxelrenderer.hpp"
+#include "debug.hpp"
+
 
 class ChunkManager
 {
@@ -19,18 +24,37 @@ public:
     void CreateChunks();
     void BuildMeshes();
     void Update(Camera* camera, GLuint distance);
+    void Start();
+    void Shutdown();
+    void RequestChunks();
 
-    PerlinNoise* _perlin = new PerlinNoise(10);
+    PerlinNoise* _perlin = new PerlinNoise(1);
 
     //Variables
-    static const uint num_chunks_X = 4;
-    static const uint num_chunks_Y = 4;
-    static const uint num_chunks_Z = 4;
-    static const uint num_chunks = num_chunks_X * num_chunks_Y * num_chunks_Z;
-    bool Shutdown = false;
+    //static const uint num_chunks_X = 4;
+    //static const uint num_chunks_Y = 4;
+    //static const uint num_chunks_Z = 4;
+    //static const uint num_chunks = num_chunks_X * num_chunks_Y * num_chunks_Z;
+    static bool SHUTDOWN;
 
+    //Chunk* chunks[num_chunks_X][num_chunks_Y][num_chunks_Z];
 
-    Chunk* chunks[num_chunks_X][num_chunks_Y][num_chunks_Z];
+    std::mutex ChunkLoadMutex;
+    std::mutex ChunkSetupMutex;
+    std::mutex ChunkVisibleMutex;
+    std::mutex ChunkRenderMutex;
+    std::mutex ChunkUnloadMutex;
+
+    // List for requested Chunks
+    std::vector<Chunk*>* ChunkLoadList;
+    // List for loaded Chunks that need to be setup
+    std::vector<Chunk*>* ChunkSetupList;
+    // List for Chunks that are setup and may be visible
+    std::vector<Chunk*>* ChunkVisibleList;
+    // List for Chunks that need to be rendered
+    std::vector<Chunk*>* ChunkRenderList;
+    // List for Chunks that need to be unloaded/cleaned up
+    std::vector<Chunk*>* ChunkUnloadList;
 
     //Constructor and Destructor
     ~ChunkManager();
@@ -40,19 +64,15 @@ private:
     unsigned int _ChunksLoadsPerFrame;
     unsigned int _ChunksLoaded;
 
+    std::thread* _T_LoadList;
+    std::thread* _T_SetupList;
+
+    DebugObject* _Debug;
 
     static ChunkManager* _instance;
     ChunkManager();
-    glm::vec3* _ActiveChunk;
-    std::vector<Chunk*>* _ChunkSetupList;
-    std::vector<Chunk*>* _ChunkVisibleList;
-    std::vector<Chunk*>* _ChunkRenderList;
-    std::vector<Chunk*>* _ChunkLoadList;
-    std::vector<Chunk*>* _ChunkUnloadList;
 
     //Methods
-    void RequestChunks(Camera* camera, GLuint distance);
-
 
 };
 

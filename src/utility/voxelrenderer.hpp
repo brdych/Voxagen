@@ -6,8 +6,9 @@
 #include <glm/mat4x4.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <utility/shader.hpp>
-#include <utility/voxagensettings.hpp>
+
+#include "utility/shader.hpp"
+#include "worldvariables.hpp"
 
 
 class VoxelRenderer
@@ -24,13 +25,13 @@ public:
 
 private:
     static Shader* _VoxelShader;
-    static VoxagenSettings* _Settings;
     static GLint _VoxelShaderMatrixID;
     GLuint vertex_count = 0;
     GLuint index_count = 0;
     GLuint _chunkVAO, _chunkVBO, _chunkEBO;
     std::vector<GLfloat>* _vertices;
     std::vector<GLuint>* _indices;
+    bool meshFinished = false;
 };
 
 #endif // VOXELRENDERER_H

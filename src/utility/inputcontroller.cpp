@@ -83,7 +83,7 @@ void InputController::ProcessInput(float deltaTime)
         {
             alt_pressed = true;
             free_mouse = true;
-            VoxagenSettings::SettingsInstance()->MENU = true;
+            WorldVariables::MENU = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
         else if (free_mouse && !alt_pressed)
