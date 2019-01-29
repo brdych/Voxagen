@@ -65,7 +65,14 @@ private:
     unsigned int _ChunksLoaded;
 
     std::thread* _T_LoadList;
+    std::thread* _T_LoadList2;
+    std::thread* _T_LoadList3;
+    std::thread* _T_LoadList4;
+
     std::thread* _T_SetupList;
+    std::thread* _T_SetupList2;
+    std::thread* _T_SetupList3;
+    std::thread* _T_SetupList4;
 
     DebugObject* _Debug;
 

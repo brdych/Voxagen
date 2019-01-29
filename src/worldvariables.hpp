@@ -27,32 +27,6 @@ public:
     inline static glm::vec3* GLOBAL_LIGHT_DIR = new glm::vec3(-1,-2,-3);
     inline static glm::vec3* GLOBAL_LIGHT_COL = new glm::vec3(1,1,1);
     inline static glm::vec3* FOG_INFO =         new glm::vec3(0, 0, 0.001);
-
-    /*static void Init()
-    {
-        // Floats
-        BLOCK_SIZE =            0.5f;
-        DELTA_TIME =            0.0f;
-        LAST_FRAME =            0.0f;
-
-        // Ints
-        CHUNK_SIZE =            64;
-
-        // Vectors
-        CLEAR_COLOUR =          new glm::vec4(0.09f, 0.09f, 1.0f, 1.0f);
-        LIGHT_POS =             new glm::vec3(-1.0f,-1.0f,-1.0f);
-        GLOBAL_LIGHT_COL =      new glm::vec3(1,1,1);
-        GLOBAL_LIGHT_DIR =      new glm::vec3(-1,-2,-3);
-        FOG_INFO =              new glm::vec3(0, 0, 0.001);
-
-        // Bools
-        PROGRAM_SHOULD_EXIT =   false;
-        CULLING_ENABLED =       true;
-        Z_BUFFER_ENABLED =      true;
-        SHOW_CHUNK_BOUNDS =     false;
-        ONLY_RENDERING_CHUNKS = false;
-        MENU =                  false;
-    }*/
 };
 
 #endif // WORLDVARIABLES_HPP

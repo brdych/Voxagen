@@ -15,6 +15,7 @@ class VoxelRenderer
 {
 public:
     VoxelRenderer();
+    ~VoxelRenderer();
     GLuint AddVertex(glm::vec3 p, GLfloat n, glm::vec3 c);
     void AddTriangle(GLuint v1, GLuint v2, GLuint v3);
     void StartMesh();
@@ -22,12 +23,12 @@ public:
     void Render(glm::mat4 mvp);
     bool ShouldRender();
     static void SetupShader();
+    GLuint vertex_count = 0;
+    GLuint index_count = 0;
 
 private:
     static Shader* _VoxelShader;
     static GLint _VoxelShaderMatrixID;
-    GLuint vertex_count = 0;
-    GLuint index_count = 0;
     GLuint _chunkVAO, _chunkVBO, _chunkEBO;
     std::vector<GLfloat>* _vertices;
     std::vector<GLuint>* _indices;

@@ -31,7 +31,7 @@ public:
     //Methods
     void BuildVoxelData();
     void BuildChunkMesh();
-    void AddCube(uint x, uint y, uint z);
+    void AddCube(uint x, uint y, uint z, glm::vec3 col);
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
     bool ShouldMesh();
     bool ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos);

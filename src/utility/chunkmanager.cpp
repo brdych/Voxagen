@@ -13,21 +13,30 @@ void UpdateLoadList()
         {
             cm->ChunkLoadMutex.lock();
             //std::cout <<"Mutex Locked by Loader: Size:"<< cm->ChunkLoadList->size() << std::endl;
-            Chunk* c = cm->ChunkLoadList->back();
-            cm->ChunkLoadList->pop_back();
+            Chunk* c = nullptr;
+            if(cm->ChunkLoadList->size()>0)
+            {
+                c = cm->ChunkLoadList->back();
+                cm->ChunkLoadList->pop_back();
+            }
             //std::cout <<"Mutex Unlock by Loader: Size:"<< cm->ChunkLoadList->size() << std::endl;
             cm->ChunkLoadMutex.unlock();
-
-            c->BuildVoxelData();
-            if(c->ShouldMesh())
+            if(c != nullptr)
             {
-                cm->ChunkSetupMutex.lock();
-                cm->ChunkSetupList->push_back(c);
-                cm->ChunkSetupMutex.unlock();
+                c->BuildVoxelData();
+                if(c->ShouldMesh())
+                {
+                    cm->ChunkSetupMutex.lock();
+                    cm->ChunkSetupList->push_back(c);
+                    cm->ChunkSetupMutex.unlock();
+                }
+                else
+                {
+                    delete c;
+                }
             }
         }
     }
-    std::cout << "Goodbye from UpdateLoadList Thread!" << std::endl;
 }
 
 void UpdateSetupList()
@@ -39,22 +48,31 @@ void UpdateSetupList()
         {
             cm->ChunkSetupMutex.lock();
             //std::cout <<"Mutex Locked by Mesher: Size:"<< cm->ChunkSetupList->size() << std::endl;
-            Chunk*c = cm->ChunkSetupList->back();
-            cm->ChunkSetupList->pop_back();
+            Chunk*c = nullptr;
+            if(cm->ChunkSetupList->size()>0)
+            {
+                c = cm->ChunkSetupList->back();
+                cm->ChunkSetupList->pop_back();
+            }
             //std::cout <<"Mutex Unlocked by Mesher: Size:"<< cm->ChunkSetupList->size() << std::endl;
             cm->ChunkSetupMutex.unlock();
 
-            c->BuildChunkMesh();
-
-            if(c->ShouldRender(0, new glm::vec3(), new glm::vec3()))
+            if(c != nullptr)
             {
-                cm->ChunkRenderMutex.lock();
-                cm->ChunkRenderList->push_back(c);
-                cm->ChunkRenderMutex.unlock();
+                c->BuildChunkMesh();
+                if(c->ShouldRender(0, new glm::vec3(), new glm::vec3()))
+                {
+                    cm->ChunkRenderMutex.lock();
+                    cm->ChunkRenderList->push_back(c);
+                    cm->ChunkRenderMutex.unlock();
+                }
+                else
+                {
+                    delete c;
+                }
             }
         }
     }
-    std::cout << "Goodbye from UpdateSetupList Thread!" << std::endl;
 }
 
 ChunkManager::ChunkManager()
@@ -70,14 +88,28 @@ ChunkManager::ChunkManager()
 void ChunkManager::Start()
 {
     _T_LoadList = new std::thread(UpdateLoadList);
+    _T_LoadList2 = new std::thread(UpdateLoadList);
+    _T_LoadList3 = new std::thread(UpdateLoadList);
+    //_T_LoadList4 = new std::thread(UpdateLoadList);
+
     _T_SetupList = new std::thread(UpdateSetupList);
+    _T_SetupList2 = new std::thread(UpdateSetupList);
+    //_T_SetupList3 = new std::thread(UpdateSetupList);
+    //_T_SetupList4 = new std::thread(UpdateSetupList);
 }
 
 void ChunkManager::Shutdown()
 {
     ChunkManager::SHUTDOWN = true;
     _T_LoadList->join();
+    _T_LoadList2->join();
+    _T_LoadList3->join();
+    //_T_LoadList4->join();
+
     _T_SetupList->join();
+    _T_SetupList2->join();
+    //_T_SetupList3->join();
+    //_T_SetupList4->join();
 }
 
 void ChunkManager::Update(Camera* camera, GLuint distance)

@@ -31,13 +31,29 @@ VoxelRenderer::VoxelRenderer()
     }
 }
 
+VoxelRenderer::~VoxelRenderer()
+{
+    delete _vertices;
+    delete _indices;
+}
+
 GLuint VoxelRenderer::AddVertex(glm::vec3 p, GLfloat n, glm::vec3 c)
 {
+    // Vertices
     _vertices->push_back(p.x);
     _vertices->push_back(p.y);
     _vertices->push_back(p.z);
+
+    // Normal
     _vertices->push_back(n);
-    return (_vertices->size()/4)-1;
+
+    // Color
+    _vertices->push_back(c.x);
+    _vertices->push_back(c.y);
+    _vertices->push_back(c.z);
+
+    vertex_count++;
+    return (_vertices->size()/7)-1;
 }
 
 void VoxelRenderer::AddTriangle(GLuint v1, GLuint v2, GLuint v3)
@@ -45,6 +61,7 @@ void VoxelRenderer::AddTriangle(GLuint v1, GLuint v2, GLuint v3)
     _indices->push_back(v1);
     _indices->push_back(v2);
     _indices->push_back(v3);
+    index_count++;
 }
 
 void VoxelRenderer::StartMesh()
@@ -54,27 +71,31 @@ void VoxelRenderer::StartMesh()
 
 void VoxelRenderer::FinishMesh()
 {
-    //VAO
+    // VAO
     glGenVertexArrays(1, &_chunkVAO);
     glBindVertexArray(_chunkVAO);
 
-    //VBO
+    // VBO
     glGenBuffers(1, &_chunkVBO);
     glBindBuffer(GL_ARRAY_BUFFER, _chunkVBO);
-    glBufferData(GL_ARRAY_BUFFER, _vertices->size()*sizeof(GLfloat), _vertices->data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _vertices->size() * sizeof(GLfloat), _vertices->data(), GL_STATIC_DRAW);
 
-    //EBO
+    // EBO
     glGenBuffers(1, &_chunkEBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _chunkEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices->size() * sizeof(GLuint), _indices->data(), GL_STATIC_DRAW);
 
-    //Coords Pointer
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), nullptr);
+    // Coords Pointer
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(0);
 
-    //Normal Pointer
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
+    // Normal Pointer
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
+
+    // Color Pointer
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (GLvoid*)(4*sizeof(GLfloat)));
+    glEnableVertexAttribArray(2);
 }
 
 bool VoxelRenderer::ShouldRender()
