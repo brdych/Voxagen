@@ -154,9 +154,9 @@ void ChunkManager::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
         c->Render(view, proj, mvp);
     }
 
-    for(Chunk*c: *ChunkRenderList)
+    if(WorldVariables::SHOW_CHUNK_BOUNDS)
     {
-        if(WorldVariables::SHOW_CHUNK_BOUNDS)
+        for(Chunk*c: *ChunkRenderList)
         {
             _Debug->DrawDebugChunk(c->chunkX, c->chunkY, c->chunkZ, *proj, *view);
         }
