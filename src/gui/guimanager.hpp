@@ -17,6 +17,8 @@ public:
     void drawControlPanel(Camera* c);
 private:
     bool show_demo_window = false;
+    bool show_chunk_info = true;
+    void drawChunkInfoPanel(bool* p_open);
 };
 
 #endif /* GUIMANAGER_H */

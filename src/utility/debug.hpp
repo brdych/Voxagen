@@ -72,6 +72,10 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
+    ~DebugObject()
+    {
+        delete Debug_Shader;
+    }
 };
 
 #endif // DEBUG_HPP

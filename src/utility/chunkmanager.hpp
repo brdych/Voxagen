@@ -8,8 +8,12 @@
 #include "world/chunk.hpp"
 #include "camera.hpp"
 #include "perlinnoise.hpp"
+#include "FastNoiseSIMD/FastNoiseSIMD.h"
 #include "utility/voxelrenderer.hpp"
 #include "debug.hpp"
+#include "chunkgenerator.hpp"
+#include "world/generation/terraingenerator.hpp"
+#include "chunkmesher.hpp"
 
 
 class ChunkManager
@@ -18,6 +22,7 @@ public:
 
     //Methods
     static ChunkManager* ChunkManagerInstance();
+
     bool BlockExistsInChunk(int x, int y, int z, int cx, int cy, int cz);
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
     bool GetBlockValue(double x, double y, double z);
@@ -28,7 +33,7 @@ public:
     void Shutdown();
     void RequestChunks();
 
-    PerlinNoise* _perlin = new PerlinNoise(1);
+    PerlinNoise* _perlin;
 
     //Variables
     //static const uint num_chunks_X = 4;
@@ -64,23 +69,19 @@ private:
     unsigned int _ChunksLoadsPerFrame;
     unsigned int _ChunksLoaded;
 
-    std::thread* _T_LoadList;
-    std::thread* _T_LoadList2;
-    std::thread* _T_LoadList3;
-    std::thread* _T_LoadList4;
-
-    std::thread* _T_SetupList;
-    std::thread* _T_SetupList2;
-    std::thread* _T_SetupList3;
-    std::thread* _T_SetupList4;
-
-    DebugObject* _Debug;
+    ChunkGenerator* _generator;
+    ChunkMesher* _mesher;
+    DebugObject* _debug;
 
     static ChunkManager* _instance;
     ChunkManager();
 
     //Methods
-
+    void UpdateLoadList();
+    void UpdateMeshList();
+    void UpdateVisibleList(Camera* c);
+    void UpdateRenderList();
+    void UpdateUnloadList();
 };
 
 #endif // CHUNKMANAGER_HPP

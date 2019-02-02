@@ -29,6 +29,7 @@ public:
 private:
     static Shader* _VoxelShader;
     static GLint _VoxelShaderMatrixID;
+
     GLuint _chunkVAO, _chunkVBO, _chunkEBO;
     std::vector<GLfloat>* _vertices;
     std::vector<GLuint>* _indices;

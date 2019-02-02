@@ -1,8 +1,9 @@
 #ifndef CHUNK_HPP
 #define CHUNK_HPP
 
-#include<stdio.h>
-#include<iostream>
+#include <stdio.h>
+#include <iostream>
+#include <vector>
 
 #include "utility/voxelrenderer.hpp"
 #include "worldvariables.hpp"
@@ -11,27 +12,30 @@ class Chunk {
 public:
 
     //Variables
-    static const int CHUNK_SIZE = 64;
+    static const int CHUNK_SIZE = 32;
+
     const int chunkX;
     const int chunkY;
     const int chunkZ;
-    bool voxeldata[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
 
-    //std::vector<bool> voxeldata2[CHUNK_SIZE][CHUNK_SIZE][CHUNK_SIZE];
+    //bool* voxeldata;
+
+    std::vector<bool> voxeldata;
 
     // True when Chunk has Voxel data
     bool isSetup = false;
-    // True when Chunk has Mesh data
+
+
+    bool isGenerating = false;
+    bool isGenerated = false;
+    bool isMeshing = false;
     bool isMeshed = false;
 
-    //bool needsRenderUpdate = false;
-    //bool needsRebuildUpdate = false;
 
 
     //Methods
-    void BuildVoxelData();
-    void BuildChunkMesh();
     void AddCube(uint x, uint y, uint z, glm::vec3 col);
+    void SetBlock(uint x, uint y, uint z, bool block);
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
     bool ShouldMesh();
     bool ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos);

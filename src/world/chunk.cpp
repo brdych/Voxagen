@@ -4,13 +4,20 @@
 #include "chrono"
 
 Chunk::Chunk(int x, int y, int z) : chunkX(x), chunkY(y), chunkZ(z) {
+    voxeldata = std::vector<bool>(CHUNK_SIZE*CHUNK_SIZE*CHUNK_SIZE, false);
     _renderer = new VoxelRenderer();
     _chunkSize = 0;
 }
 
-Chunk::~Chunk() {
-    //std::cout << "Chunk: " << chunkX << " " << chunkY << " " << chunkZ << " destroyed!" << std::endl;
+Chunk::~Chunk()
+{
     delete _renderer;
+}
+
+void Chunk::SetBlock(uint x, uint y, uint z, bool block)
+{
+    voxeldata[x + CHUNK_SIZE * (y + CHUNK_SIZE * z)] = block;
+    _chunkSize++;
 }
 
 bool Chunk::ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos)
@@ -27,60 +34,6 @@ bool Chunk::ShouldMesh()
     return _chunkSize > 0;
 }
 
-void Chunk::BuildVoxelData()
-{
-    auto begin = std::chrono::high_resolution_clock::now();
-    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
-    int cx = chunkX*CHUNK_SIZE, cy = chunkY*CHUNK_SIZE, cz = chunkZ * CHUNK_SIZE;
-    //std::cout << "Generating Voxel Data" << std::endl;
-    for(int x = 0; x < CHUNK_SIZE; x++)
-        for(int z = 0; z < CHUNK_SIZE; z++)
-            for(int y = 0; y < CHUNK_SIZE; y++)
-            {
-                bool block;
-                block = voxeldata[x][y][z] = cm->GetBlockValue(x+cx,y+cy,z+cz);
-                //block = voxeldata[x][y][z] = (rand() < (RAND_MAX/2));
-                //block = voxeldata[x][y][z] = true;
-                _chunkSize = (block) ? _chunkSize+1 : _chunkSize;
-            }
-    auto end = std::chrono::high_resolution_clock::now();
-    auto dur = end - begin;
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
-    //std::cout << "Chunk Data("<<_chunkSize<<") For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl;
-}
-
-void Chunk::BuildChunkMesh()
-{
-    if(ShouldMesh())
-    {
-        //std::string debug = "=================================";
-        auto begin = std::chrono::high_resolution_clock::now();
-        //_renderer->StartMesh();
-        for(uint x = 0; x < CHUNK_SIZE; x++)
-            for(uint z = 0; z < CHUNK_SIZE; z++)
-                for(uint y = 0; y < CHUNK_SIZE; y++)
-                    if(voxeldata[x][y][z])
-                    {
-                        int ya = y + (chunkY*CHUNK_SIZE);
-                        /*debug+="Chunk:"+std::to_string(chunkX)+" "+std::to_string(chunkY)+" "+std::to_string(chunkZ)+
-                                " | Block: "+std::to_string(x)+" "+std::to_string(y)+" "+std::to_string(z)+" | ya: "+std::to_string(ya) + "\n";*/
-                        glm::vec3 col;
-                        if(ya < 100)        {col = glm::vec3(0.1,0.1,1);}
-                        else if(ya < 130)   {col = glm::vec3(0.8,0.8,0.4);}
-                        else if (ya < 200)  {col = glm::vec3(0.1,0.4,0.1);}
-                        else if (ya < 230)  {col = glm::vec3(0.5,0.4,0.3);}
-                        else                {col = glm::vec3(1,1,1);}
-                        AddCube(x,y,z,col);
-                    }
-        //std::cout << debug << std::endl;
-        //_renderer->FinishMesh();
-        auto end = std::chrono::high_resolution_clock::now();
-        auto dur = end - begin;
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
-        //std::cout << "Chunk Mesh(v: "<< _renderer->vertex_count << " i: " << _renderer->index_count << ") For Chunk: "<<chunkX<<" "<<chunkY<<" "<<chunkZ<<" took: "<< ms << std::endl;
-    }
-}
-
 void Chunk::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
 {
     if(_chunkSize > 0)
@@ -92,10 +45,8 @@ void Chunk::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
 
 void Chunk::AddCube(uint x, uint y, uint z, glm::vec3 col)
 {
-    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
-
     //std::cout << "AddCube: " << x << " " << y << " " << z <<std::endl;
-
+    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
     float voxel_size = WorldVariables::BLOCK_SIZE;
     glm::vec3 v0 = glm::vec3(x-voxel_size,y-voxel_size,z-voxel_size);
     glm::vec3 v1 = glm::vec3(x-voxel_size,y-voxel_size,z+voxel_size);
@@ -109,7 +60,7 @@ void Chunk::AddCube(uint x, uint y, uint z, glm::vec3 col)
     //std::cout << "Init" <<std::endl;
 
     //Top
-    if(! ((y!=CHUNK_SIZE-1) ? voxeldata[x][y+1][z] : cm->BlockExistsInChunk(x,0,z, chunkX,chunkY+1,chunkZ)) )
+    if(! ((y!=CHUNK_SIZE-1) ? voxeldata[x + CHUNK_SIZE * ((y+1) + CHUNK_SIZE * z)] : cm->BlockExistsInChunk(x,0,z, chunkX,chunkY+1,chunkZ)) )
     {
         GLuint p1 = _renderer->AddVertex(v4,0,col);
         GLuint p2 = _renderer->AddVertex(v7,0,col);
@@ -125,7 +76,7 @@ void Chunk::AddCube(uint x, uint y, uint z, glm::vec3 col)
     //std::cout << "Top" <<std::endl;
 
     //Bottom
-    if(! ((y!=0) ? voxeldata[x][y-1][z] : cm->BlockExistsInChunk(x,CHUNK_SIZE-1,z, chunkX,chunkY-1,chunkZ)))
+    if(! ((y!=0) ? voxeldata[x + CHUNK_SIZE * ((y-1) + CHUNK_SIZE * z)] : cm->BlockExistsInChunk(x,CHUNK_SIZE-1,z, chunkX,chunkY-1,chunkZ)))
     {
         GLuint p1 = _renderer->AddVertex(v1,1,col);
         GLuint p2 = _renderer->AddVertex(v2,1,col);
@@ -138,7 +89,7 @@ void Chunk::AddCube(uint x, uint y, uint z, glm::vec3 col)
     //std::cout << "Bottom" <<std::endl;
 
     //Right
-    if(! ((x!=CHUNK_SIZE-1) ? voxeldata[x+1][y][z] : cm->BlockExistsInChunk(0,y,z, chunkX+1,chunkY,chunkZ)))
+    if(! ((x!=CHUNK_SIZE-1) ? voxeldata[(x+1) + CHUNK_SIZE * (y + CHUNK_SIZE * z)] : cm->BlockExistsInChunk(0,y,z, chunkX+1,chunkY,chunkZ)))
     {
         GLuint p1 = _renderer->AddVertex(v7,2,col);
         GLuint p2 = _renderer->AddVertex(v2,2,col);
@@ -151,7 +102,7 @@ void Chunk::AddCube(uint x, uint y, uint z, glm::vec3 col)
     //std::cout << "Right" <<std::endl;
 
     //Left
-    if(! ((x!=0) ? voxeldata[x-1][y][z] : cm->BlockExistsInChunk(CHUNK_SIZE-1,y,z, chunkX-1,chunkY,chunkZ)))
+    if(! ((x!=0) ? voxeldata[(x-1) + CHUNK_SIZE * (y + CHUNK_SIZE * z)] : cm->BlockExistsInChunk(CHUNK_SIZE-1,y,z, chunkX-1,chunkY,chunkZ)))
     {
         GLuint p1 = _renderer->AddVertex(v4,3,col);
         GLuint p2 = _renderer->AddVertex(v1,3,col);
@@ -164,7 +115,7 @@ void Chunk::AddCube(uint x, uint y, uint z, glm::vec3 col)
     //std::cout << "Left" <<std::endl;
 
     //Front
-    if(! ((z!=CHUNK_SIZE-1) ? voxeldata[x][y][z+1] : cm->BlockExistsInChunk(x,y,0, chunkX,chunkY,chunkZ+1)))
+    if(! ((z!=CHUNK_SIZE-1) ? voxeldata[x + CHUNK_SIZE * (y + CHUNK_SIZE * (z+1))] : cm->BlockExistsInChunk(x,y,0, chunkX,chunkY,chunkZ+1)))
     {
         GLuint p1 = _renderer->AddVertex(v5,4,col);
         GLuint p2 = _renderer->AddVertex(v3,4,col);
@@ -177,7 +128,7 @@ void Chunk::AddCube(uint x, uint y, uint z, glm::vec3 col)
     //std::cout << "Front" <<std::endl;
 
     //Back
-    if(! ((z!=0) ? voxeldata[x][y][z-1] : cm->BlockExistsInChunk(x,y,CHUNK_SIZE-1, chunkX,chunkY,chunkZ-1)))
+    if(! ((z!=0) ? voxeldata[x + CHUNK_SIZE * (y + CHUNK_SIZE * (z-1))] : cm->BlockExistsInChunk(x,y,CHUNK_SIZE-1, chunkX,chunkY,chunkZ-1)))
     {
         GLuint p1 = _renderer->AddVertex(v6,5,col);
         GLuint p2 = _renderer->AddVertex(v0,5,col);

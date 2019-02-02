@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <thread>
 
 using namespace std;
@@ -14,6 +14,8 @@ using namespace std;
 #include "utility/inputcontroller.hpp"
 #include "worldvariables.hpp"
 #include "utility/debug.hpp"
+#include "world/generation/worldgenerator.hpp"
+#include "world/generation/terraingenerator.hpp"
 
 
 // settings
@@ -24,14 +26,14 @@ float RandomFloat(float a, float b) {
     return a + ((((float) rand()) / (float) RAND_MAX) * (b - a));
 }
 
-int main(void)
+int main()
 {
     cout << "Voxagen Started!" << endl;
 
     Loader* loader = new Loader();
     GLFWwindow* window = loader->LoadGL(SCR_WIDTH, SCR_HEIGHT);
     GuiManager* gui = new GuiManager(window);
-    Camera* camera = new Camera(glm::vec3(0.0f, 256.0f, 0.0f));
+    Camera* camera = new Camera(glm::vec3(0.0f, 100.0f, 0.0f));
     InputController* inputController = InputController::GetInputControllerInstance();
     ChunkManager* chunkManager = ChunkManager::ChunkManagerInstance();
 
@@ -41,7 +43,8 @@ int main(void)
 
     inputController->SetupControls(window, camera);
     chunkManager->RequestChunks();
-    chunkManager->Start();
+
+
 
     while(!glfwWindowShouldClose(window)&&!WorldVariables::PROGRAM_SHOULD_EXIT)
     {
@@ -61,6 +64,8 @@ int main(void)
         //Update View
         view = camera->GetViewMatrix();
 
+        // Update Chunks
+        chunkManager->Update(camera,0);
         // Render Chunks
         chunkManager->Render(&view,&proj,&mvp);
 
@@ -70,7 +75,15 @@ int main(void)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    chunkManager->Shutdown();
+    //chunkManager->Shutdown();
+    cout << "Beginning Shutdown" << endl;
+
+    delete loader;
+    //delete gui;
+    delete camera;
+    delete inputController;
+    delete chunkManager;
+
     cout << "Shutting Down Voxagen!" << endl;
     return 0;
 }

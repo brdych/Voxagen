@@ -1,4 +1,5 @@
 #include "gui/guimanager.hpp"
+#include "utility/chunkmanager.hpp"
 
 GuiManager::GuiManager(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
@@ -19,6 +20,42 @@ GuiManager::~GuiManager() {
     ImGui::DestroyContext();
 }
 
+void GuiManager::drawChunkInfoPanel(bool* p_open)
+{
+    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
+    if (!ImGui::Begin("Chunk Info", p_open))
+    {
+        ImGui::End();
+        return;
+    }
+    ImGui::Text("Chunk Loadlist: %i", cm->ChunkLoadList->size());
+
+    ImGui::Text("Chunk Meshlist: %i", cm->ChunkSetupList->size());
+
+    ImGui::Text("Chunk Visiblelist: %i", cm->ChunkVisibleList->size());
+
+    ImGui::Text("Chunk Renderlist: %i", cm->ChunkRenderList->size());
+
+    ImGui::Text("Chunk Unloadlist: %i", cm->ChunkUnloadList->size());
+
+    ImGui::Separator();
+    if (ImGui::Button("DELETE ALL")) {
+        WorldVariables::DELETE_ALL = true;
+    }
+
+    if (ImGui::Button("REBUILD ALL")) {
+        WorldVariables::DELETE_ALL = false;
+        WorldVariables::REBUILD_ALL = true;
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::Button("Close")) {
+        *p_open = false;
+    }
+    ImGui::End();
+}
+
 void GuiManager::drawControlPanel(Camera* c) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -26,8 +63,13 @@ void GuiManager::drawControlPanel(Camera* c) {
     if (show_demo_window) {
         ImGui::ShowDemoWindow(&show_demo_window);
     }
+    if (show_chunk_info) {
+        drawChunkInfoPanel(&show_chunk_info);
+    }
     ImGui::Begin("Voxagen Control Panel");
     ImGui::Checkbox("Demo Window",          &show_demo_window);
+    ImGui::SameLine();
+    ImGui::Checkbox("Chunk Info",          &show_chunk_info);
     ImGui::Separator();
     ImGui::Checkbox("GL Culling",           &WorldVariables::CULLING_ENABLED);
     ImGui::SameLine();
