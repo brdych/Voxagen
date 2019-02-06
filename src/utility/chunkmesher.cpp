@@ -2,6 +2,11 @@
 
 void GenChunk(Chunk* c)
 {
+    WorldVariables::MESH_LOCK.lock();
+    WorldVariables::NUM_MESH_THREADS++;
+    WorldVariables::MESH_LOCK.unlock();
+
+
     uint CHUNK_SIZE = WorldVariables::CHUNK_SIZE;
     for(uint x = 0; x < CHUNK_SIZE; x++)
         for(uint z = 0; z < CHUNK_SIZE; z++)
@@ -19,6 +24,10 @@ void GenChunk(Chunk* c)
                     c->AddCube(x,y,z,col);
                 }
     c->isMeshed = true;
+
+    WorldVariables::MESH_LOCK.lock();
+    WorldVariables::NUM_MESH_THREADS--;
+    WorldVariables::MESH_LOCK.unlock();
 }
 
 ChunkMesher::ChunkMesher()

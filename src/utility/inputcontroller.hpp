@@ -16,6 +16,7 @@ private:
     //Functions
     InputController();
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+    static void MouseClickCallback(GLFWwindow* window, int button, int action, int mods);
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
     //Variables

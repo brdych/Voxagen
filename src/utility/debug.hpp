@@ -9,7 +9,7 @@
 class DebugObject
 {
 private:
-    Shader* Debug_Shader;
+    Shader Debug_Shader = Shader("../src/shaders/LightShader.vert","../src/shaders/LightShader.frag");
     GLint LightMatrixID;
     GLuint lightVAO, lightVBO, lightEBO;
 
@@ -40,9 +40,7 @@ public:
             5,3,7,  //Front
             5,1,3
         };
-
-        Debug_Shader = new Shader("../src/shaders/LightShader.vert","../src/shaders/LightShader.frag");
-        LightMatrixID = glGetUniformLocation(Debug_Shader->ID, "MVP");
+        LightMatrixID = glGetUniformLocation(Debug_Shader.ID, "MVP");
 
         glGenBuffers(1, &lightVBO);
         glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
@@ -58,13 +56,28 @@ public:
         glEnableVertexAttribArray(0);
     }
 
-    void DrawDebugChunk(int x,int y,int z, glm::mat4 &proj, glm::mat4 &view)
+    void DrawDebugChunk(int x,int y,int z, glm::mat4 &proj, glm::mat4 &view, glm::vec3 col)
     {
         int s = WorldVariables::CHUNK_SIZE;
-        Debug_Shader->use();
+        Debug_Shader.use();
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3((x*s)-0.5,(y*s)-0.5,(z*s)-0.5));
         model = glm::translate(model, glm::vec3(s/2,s/2,s/2));
+        model = glm::scale(model, glm::vec3(s,s,s));
+        glm::mat4 mvp = proj * view * model;
+        glUniformMatrix4fv(LightMatrixID, 1, GL_FALSE, &mvp[0][0]);
+        Debug_Shader.setVec3("COL", col);
+        glBindVertexArray(lightVAO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    }
+
+    void DrawDebugCube(int x,int y,int z, glm::mat4 &proj, glm::mat4 &view)
+    {
+        int s = 1;
+        Debug_Shader.use();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3(x,y,z));
         model = glm::scale(model, glm::vec3(s,s,s));
         glm::mat4 mvp = proj * view * model;
         glUniformMatrix4fv(LightMatrixID, 1, GL_FALSE, &mvp[0][0]);
@@ -72,9 +85,10 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
+
     ~DebugObject()
     {
-        delete Debug_Shader;
+
     }
 };
 

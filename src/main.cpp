@@ -3,8 +3,7 @@
 #include <iostream>
 #include <cstdio>
 #include <thread>
-
-using namespace std;
+#include <unordered_map>
 
 #include "gui/guimanager.hpp"
 #include "world/chunk.hpp"
@@ -16,15 +15,11 @@ using namespace std;
 #include "utility/debug.hpp"
 #include "world/generation/worldgenerator.hpp"
 #include "world/generation/terraingenerator.hpp"
-
+#include "utility/chunkstorage.hpp"
 
 // settings
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
-
-float RandomFloat(float a, float b) {
-    return a + ((((float) rand()) / (float) RAND_MAX) * (b - a));
-}
 
 int main()
 {
@@ -40,11 +35,9 @@ int main()
     glm::mat4 proj = glm::perspective(glm::radians(50.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 2000.0f);
     glm::mat4 view;
     glm::mat4 mvp;
+    DebugObject d = DebugObject();
 
     inputController->SetupControls(window, camera);
-    chunkManager->RequestChunks();
-
-
 
     while(!glfwWindowShouldClose(window)&&!WorldVariables::PROGRAM_SHOULD_EXIT)
     {
@@ -64,6 +57,32 @@ int main()
         //Update View
         view = camera->GetViewMatrix();
 
+        glm::vec3 pos = camera->Position;
+        int cs = WorldVariables::CHUNK_SIZE;
+        int ix = static_cast<int>(pos.x), iy = static_cast<int>(pos.y), iz = static_cast<int>(pos.z);
+        WorldVariables::CUR_POS = pos;
+        WorldVariables::CUR_POS_INT = glm::vec3(ix, iy, iz);
+        WorldVariables::CUR_CHUNK = glm::vec3(ix/cs, iy/cs, iz/cs);
+        WorldVariables::CUR_POS_CHUNK = glm::vec3(abs(ix%cs), abs(iy%cs), abs(iz%cs));
+        if(pos.x<0)
+        {
+            WorldVariables::CUR_CHUNK.x-=1;
+            WorldVariables::CUR_POS_CHUNK.x = WorldVariables::CHUNK_SIZE - WorldVariables::CUR_POS_CHUNK.x;
+        }
+        if(pos.y<0)
+        {
+            WorldVariables::CUR_CHUNK.y-=1;
+            WorldVariables::CUR_POS_CHUNK.y = WorldVariables::CHUNK_SIZE - WorldVariables::CUR_POS_CHUNK.y;
+        }
+        if(pos.z<0)
+        {
+            WorldVariables::CUR_CHUNK.z-=1;
+            WorldVariables::CUR_POS_CHUNK.z = WorldVariables::CHUNK_SIZE - WorldVariables::CUR_POS_CHUNK.z;
+        }
+
+        //d.DrawDebugCube(pos.x,pos.y,pos.z,proj,view);
+
+
         // Update Chunks
         chunkManager->Update(camera,0);
         // Render Chunks
@@ -72,17 +91,28 @@ int main()
         // Render Dear ImGui
         if(WorldVariables::MENU) { gui->drawControlPanel(camera); }
 
+        // Clear RenderList for next frame
+        chunkManager->ClearRenderList();
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
     //chunkManager->Shutdown();
     cout << "Beginning Shutdown" << endl;
 
-    delete loader;
-    //delete gui;
-    delete camera;
-    delete inputController;
+    cout << "Deleting ChunkManager" << endl;
     delete chunkManager;
+
+    cout << "Deleting Loader" << endl;
+    delete loader;
+
+    //delete gui;
+
+    cout << "Deleting Camera" << endl;
+    delete camera;
+
+    cout << "Deleting Input Controller" << endl;
+    delete inputController;
 
     cout << "Shutting Down Voxagen!" << endl;
     return 0;

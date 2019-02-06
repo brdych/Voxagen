@@ -66,7 +66,7 @@ void VoxelRenderer::AddTriangle(GLuint v1, GLuint v2, GLuint v3)
 
 void VoxelRenderer::StartMesh()
 {
-
+    meshFinished = false;
 }
 
 void VoxelRenderer::FinishMesh()

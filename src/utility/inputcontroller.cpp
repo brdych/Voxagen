@@ -1,4 +1,5 @@
 #include "inputcontroller.hpp"
+#include "chunkmanager.hpp"
 
 InputController* InputController::_Instance;
 Camera* InputController::camera;
@@ -49,6 +50,33 @@ void InputController::MouseCallback(GLFWwindow* awindow, double xpos, double ypo
     }
 }
 
+void InputController::MouseClickCallback(GLFWwindow *window, int button, int action, int mods)
+{
+    int CHUNK_SIZE = WorldVariables::CHUNK_SIZE;
+    glm::vec3 cp = WorldVariables::CUR_CHUNK;
+    glm::vec3 cb = WorldVariables::CUR_POS_CHUNK;
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        Chunk* c = ChunkManager::ChunkManagerInstance()->ChunkStore->GetChunk(cp.x,cp.y,cp.z);
+        if(c->isMeshed)
+        {
+            c->SetBlock(cb.x,cb.y,cb.z, true);
+            c->isMeshed = false;
+            c->isMeshing = false;
+        }
+    }
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        Chunk* c = ChunkManager::ChunkManagerInstance()->ChunkStore->GetChunk(cp.x,cp.y,cp.z);
+        if(c->isMeshed)
+        {
+            c->SetBlock(cb.x,cb.y,cb.z, false);
+            c->isMeshed = false;
+            c->isMeshing = false;
+        }
+    }
+}
+
 void InputController::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera->ProcessMouseScroll(xoffset);
@@ -60,6 +88,7 @@ void InputController::SetupControls(GLFWwindow* window, Camera* camera)
     this->window = window;
     glfwSetCursorPosCallback(window,MouseCallback);
     glfwSetScrollCallback(window, ScrollCallback);
+    glfwSetMouseButtonCallback(window, MouseClickCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
@@ -75,7 +104,6 @@ void InputController::ProcessInput(float deltaTime)
         camera->ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera->ProcessKeyboard(RIGHT, deltaTime);
-
 
     if(glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
     {

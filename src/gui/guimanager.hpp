@@ -18,7 +18,9 @@ public:
 private:
     bool show_demo_window = false;
     bool show_chunk_info = true;
+    bool show_camera_info = true;
     void drawChunkInfoPanel(bool* p_open);
+    void drawCameraInfoPanel(bool* p_open);
 };
 
 #endif /* GUIMANAGER_H */
