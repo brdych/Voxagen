@@ -141,6 +141,8 @@ void GuiManager::drawControlPanel(Camera* c) {
     ImGui::Checkbox("GL Depth Buffer",      &WorldVariables::Z_BUFFER_ENABLED);
     ImGui::SameLine();
     ImGui::Checkbox("Wireframe",            &WorldVariables::USE_WIREFRAME);
+    ImGui::SameLine();
+    ImGui::Checkbox("Freeze RenderList",    &WorldVariables::FREEZE_RENDERLIST);
     ImGui::Separator();
     ImGui::ColorEdit3("Clear Color",        (float*)WorldVariables::CLEAR_COLOUR);
     ImGui::ColorEdit3("Global Light Color", (float*)WorldVariables::GLOBAL_LIGHT_COL);

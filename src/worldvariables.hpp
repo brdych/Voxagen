@@ -23,7 +23,7 @@ public:
     inline static float EMPTYLIST_TIME = 0.0f;
     inline static float UNLOADLIST_TIME = 0.0f;
 
-    inline static int VIEW_DISTANCE = 8;
+    inline static int VIEW_DISTANCE = 4;
 
     inline static unsigned int CHUNK_SIZE = 64;
     inline static unsigned int CHUNK_UPDATES_PER_FRAME = 8;
@@ -40,6 +40,7 @@ public:
     inline static bool MENU =                   true;
     inline static bool DELETE_ALL =             false;
     inline static bool REBUILD_ALL =            false;
+    inline static bool FREEZE_RENDERLIST=       false;
 
     inline static bool SHOW_LOAD_BOUNDS =       false;
     inline static bool SHOW_MESH_BOUNDS =       false;
@@ -48,14 +49,11 @@ public:
     inline static bool SHOW_UNLOAD_BOUNDS =     false;
     inline static bool SHOW_EMPTY_BOUNDS =      false;
 
-
-
-    inline static glm::vec4* CLEAR_COLOUR =     new glm::vec4(0.09f, 0.09f, 1.0f, 1.0f);
+    inline static glm::vec3* CLEAR_COLOUR =     new glm::vec3(0.09f, 0.09f, 1.0f);
     inline static glm::vec3* LIGHT_POS =        new glm::vec3(-1.0f,-1.0f,-1.0f);
     inline static glm::vec3* GLOBAL_LIGHT_DIR = new glm::vec3(-1,-2,-3);
     inline static glm::vec3* GLOBAL_LIGHT_COL = new glm::vec3(1,1,1);
     inline static glm::vec3* FOG_INFO =         new glm::vec3(0, 0, 0.001);
-
 
     inline static glm::vec3 CUR_POS;
     inline static glm::vec3 CUR_POS_INT;

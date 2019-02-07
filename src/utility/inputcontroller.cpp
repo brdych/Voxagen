@@ -60,7 +60,7 @@ void InputController::MouseClickCallback(GLFWwindow *window, int button, int act
         Chunk* c = ChunkManager::ChunkManagerInstance()->ChunkStore->GetChunk(cp.x,cp.y,cp.z);
         if(c->isMeshed)
         {
-            c->SetBlock(cb.x,cb.y,cb.z, true);
+            c->AddBlock(cb.x,cb.y,cb.z);
             c->isMeshed = false;
             c->isMeshing = false;
         }
@@ -70,7 +70,7 @@ void InputController::MouseClickCallback(GLFWwindow *window, int button, int act
         Chunk* c = ChunkManager::ChunkManagerInstance()->ChunkStore->GetChunk(cp.x,cp.y,cp.z);
         if(c->isMeshed)
         {
-            c->SetBlock(cb.x,cb.y,cb.z, false);
+            c->RemoveBlock(cb.x,cb.y,cb.z);
             c->isMeshed = false;
             c->isMeshing = false;
         }

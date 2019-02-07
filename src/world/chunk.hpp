@@ -8,6 +8,7 @@
 #include "utility/voxelrenderer.hpp"
 #include "worldvariables.hpp"
 #include "utility/mesh.hpp"
+#include "glm/glm.hpp"
 
 class Chunk {
 public:
@@ -25,12 +26,19 @@ public:
     bool isGenerated = false;
     bool isMeshing = false;
     bool isMeshed = false;
+    bool inUse = false;
+    bool rebuild = false;
 
     //Methods
     void AddCube(uint x, uint y, uint z, glm::vec3 col);
-    void SetBlock(uint x, uint y, uint z, bool block);
     bool GetBlock(uint x, uint y, uint z);
+
+    void AddBlock(uint x, uint y, uint z);
+    void RemoveBlock(uint x, uint y, uint z);
+
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
+    void SetMesh(Mesh m);
+    Mesh* GetMesh();
     bool ShouldMesh();
     bool ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos);
     void PrintDebug();

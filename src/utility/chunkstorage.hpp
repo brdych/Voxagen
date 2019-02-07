@@ -16,14 +16,20 @@ public:
     ~ChunkStorage();
 
     bool ChunkExists(int x, int y, int z);
+    bool ChunkExists(std::string h);
+
     void DeleteChunk(int x, int y, int z);
+    void DeleteChunk(std::string h);
+
     Chunk* GetChunk(int x, int y, int z);
+    Chunk* GetChunk(std::string h);
     Chunk* InsertChunk(int x, int y, int z);
+
+    std::string ChunkHash(int x, int y, int z);
     static int NUM_CHUNKS_STORED;
 
 private:
     std::unordered_map<std::string, Chunk*>* _chunks;
-    std::string ChunkHash(int x, int y, int z);
     std::mutex _mapLock;
 };
 

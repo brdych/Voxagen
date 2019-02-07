@@ -45,9 +45,9 @@ int main()
         float currentFrame = (float)glfwGetTime();
         WorldVariables::DELTA_TIME = currentFrame - WorldVariables::LAST_FRAME;
         WorldVariables::LAST_FRAME = currentFrame;
-        glm::vec4* clear_color = WorldVariables::CLEAR_COLOUR;
+        glm::vec3* clear_color = WorldVariables::CLEAR_COLOUR;
 
-        glClearColor(clear_color->x, clear_color->y, clear_color->z, clear_color->w);
+        glClearColor(clear_color->x, clear_color->y, clear_color->z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDepthFunc(GL_LESS);
 

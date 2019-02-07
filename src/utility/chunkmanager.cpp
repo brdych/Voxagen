@@ -44,12 +44,15 @@ ChunkManager::~ChunkManager()
 
 void ChunkManager::Update(Camera* camera, GLuint distance)
 {
-    RequestChunks(camera);
-    UpdateLoadList();
-    UpdateMeshList();
-    UpdateVisibleList(camera);
-    UpdateEmptyList();
-    UpdateUnloadList();
+    if(!WorldVariables::FREEZE_RENDERLIST)
+    {
+        RequestChunks(camera);
+        UpdateLoadList();
+        UpdateMeshList();
+        UpdateVisibleList(camera);
+        UpdateEmptyList();
+        UpdateUnloadList();
+    }
 }
 
 void ChunkManager::UpdateEmptyList()
@@ -76,7 +79,7 @@ void ChunkManager::UpdateUnloadList()
     for(uint i = 0; i < ChunkUnloadList->size() && rms<maxRms; i++)
     {
         Chunk* c = ChunkUnloadList->at(i);
-        if((c->isMeshed || !c->isMeshing) || (c->isGenerated || !c->isGenerating))
+        if(!c->inUse && ((c->isMeshed || !c->isMeshing) || (c->isGenerated || !c->isGenerating)))
         {
             ChunkUnloadList->at(i) = ChunkUnloadList->back();
             ChunkUnloadList->pop_back();
@@ -105,6 +108,12 @@ void ChunkManager::UpdateVisibleList(Camera* c)
             ChunkVisibleList->pop_back();
             ChunkUnloadList->push_back(a);
         }
+        else if(a->GetMesh()->EmptyMesh())
+        {
+            ChunkVisibleList->at(i) = ChunkVisibleList->back();
+            ChunkVisibleList->pop_back();
+            ChunkEmptyList->push_back(a);
+        }
         else if(!a->isMeshed)
         {
             ChunkVisibleList->at(i) = ChunkVisibleList->back();
@@ -122,30 +131,49 @@ void ChunkManager::UpdateVisibleList(Camera* c)
 void ChunkManager::UpdateMeshList()
 {
     auto start = std::chrono::high_resolution_clock::now();
-    uint s = ChunkMeshList->size();
     uint maxLoads = WorldVariables::CHUNK_UPDATES_PER_FRAME;
     uint curLoads = 0;
     for(uint i = 0; i < ChunkMeshList->size()&&curLoads < maxLoads; i++)
     {
         Chunk* c = ChunkMeshList->at(i);
-        if(c->isMeshed)
+        if(!ChunkInViewDistance(c))
         {
             ChunkMeshList->at(i) = ChunkMeshList->back();
             ChunkMeshList->pop_back();
-            if(ChunkInViewDistance(c))
-            {
-                ChunkVisibleList->push_back(c);
-            }
-            else
-            {
-                ChunkUnloadList->push_back(c);
-            }
+            ChunkUnloadList->push_back(c);
+        }
+        else if(c->isMeshed)
+        {
+            ChunkMeshList->at(i) = ChunkMeshList->back();
+            ChunkMeshList->pop_back();
+            ChunkVisibleList->push_back(c);
         }
         else if (!c->isMeshing)
         {
-            _mesher->GenerateChunkMesh(c);
-            c->isMeshing = true;
-            curLoads++;
+            std::string hTop = ChunkStore->ChunkHash(c->chunkX, c->chunkY+1, c->chunkZ);
+            std::string hBottom = ChunkStore->ChunkHash(c->chunkX, c->chunkY-1, c->chunkZ);
+            std::string hRight = ChunkStore->ChunkHash(c->chunkX+1, c->chunkY, c->chunkZ);
+            std::string hLeft = ChunkStore->ChunkHash(c->chunkX-1, c->chunkY, c->chunkZ);
+            std::string hFront = ChunkStore->ChunkHash(c->chunkX, c->chunkY, c->chunkZ+1);
+            std::string hBack = ChunkStore->ChunkHash(c->chunkX, c->chunkY, c->chunkZ-1);
+            if( ChunkStore->ChunkExists(hTop) && ChunkStore->ChunkExists(hBottom) && ChunkStore->ChunkExists(hRight) &&
+                ChunkStore->ChunkExists(hLeft) && ChunkStore->ChunkExists(hFront) && ChunkStore->ChunkExists(hBack))
+            {
+                Chunk* top =    ChunkStore->GetChunk(hTop);
+                Chunk* bottom = ChunkStore->GetChunk(hBottom);
+                Chunk* right =  ChunkStore->GetChunk(hRight);
+                Chunk* left =   ChunkStore->GetChunk(hLeft);
+                Chunk* front =  ChunkStore->GetChunk(hFront);
+                Chunk* back =   ChunkStore->GetChunk(hBack);
+
+                if(top->isGenerated && bottom->isGenerated && right->isGenerated && left->isGenerated && front->isGenerated && back->isGenerated)
+                {
+                    top->inUse = bottom->inUse = right->inUse = left->inUse = front->inUse = back->inUse = true;
+                    _mesher->GenerateChunkMesh(c, top, bottom, right, left, front, back);
+                    c->isMeshing = true;
+                    curLoads++;
+                }
+            }
         }
     }
     WorldVariables::MESHLIST_TIME += std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()-start).count();
@@ -211,7 +239,8 @@ void ChunkManager::RequestChunks(Camera* c)
 
 void ChunkManager::ClearRenderList()
 {
-    ChunkRenderList->clear();
+    if(!WorldVariables::FREEZE_RENDERLIST)
+        ChunkRenderList->clear();
 }
 
 ChunkManager* ChunkManager::ChunkManagerInstance()
@@ -322,7 +351,7 @@ bool ChunkManager::ChunkInViewDistance(Chunk *c)
     int cx = c->chunkX;
     int cy = c->chunkY;
     int cz = c->chunkZ;
-    return abs(cx-cc.x) <= V_D && abs(cy-cc.y) <= V_D && abs(cz-cc.z) <= V_D;
+    return abs(cx-cc.x) <= V_D && abs(cy-cc.y) <= V_D/2 && abs(cz-cc.z) <= V_D;
 }
 
 /*bool ChunkManager::GetBlockValue(double x, double y, double z)

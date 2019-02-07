@@ -96,7 +96,7 @@ GLuint Mesh::AddVertex(glm::vec3 p, GLfloat n, glm::vec3 c)
         _vertices.push_back(c.x);
         _vertices.push_back(c.y);
         _vertices.push_back(c.z);
-        _vertexMap.emplace(HashVertex(p,n,c), _vertexCount);
+        //_vertexMap.emplace(HashVertex(p,n,c), _vertexCount);
         return _vertexCount++;
     }
     return i;
@@ -140,4 +140,9 @@ void Mesh::Render(glm::mat4 mvp)
 bool Mesh::ShouldRender()
 {
     return _indexCount > 0;
+}
+
+bool Mesh::EmptyMesh()
+{
+    return _indexCount == 0;
 }

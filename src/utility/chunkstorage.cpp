@@ -34,11 +34,29 @@ Chunk* ChunkStorage::GetChunk(int x, int y, int z)
     return c;
 }
 
+Chunk* ChunkStorage::GetChunk(std::string h)
+{
+    Chunk* c = _chunks->at(h);
+    return c;
+}
+
 void ChunkStorage::DeleteChunk(int x, int y, int z)
 {
-    if(ChunkExists(x,y,z))
+    std::string h = ChunkHash(x,y,z);
+    if(ChunkExists(h))
     {
-        std::string h = ChunkHash(x,y,z);
+        _mapLock.lock();
+            delete _chunks->at(h);
+            _chunks->erase(_chunks->find(h));
+        _mapLock.unlock();
+        NUM_CHUNKS_STORED--;
+    }
+}
+
+void ChunkStorage::DeleteChunk(std::string h)
+{
+    if(ChunkExists(h))
+    {
         _mapLock.lock();
             delete _chunks->at(h);
             _chunks->erase(_chunks->find(h));
@@ -51,6 +69,14 @@ bool ChunkStorage::ChunkExists(int x, int y, int z)
 {
     _mapLock.lock();
         bool val = _chunks->find(ChunkHash(x,y,z)) != _chunks->end();
+    _mapLock.unlock();
+    return val;
+}
+
+bool ChunkStorage::ChunkExists(std::string h)
+{
+    _mapLock.lock();
+        bool val = _chunks->find(h) != _chunks->end();
     _mapLock.unlock();
     return val;
 }

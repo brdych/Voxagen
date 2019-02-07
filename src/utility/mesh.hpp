@@ -23,6 +23,7 @@ public:
     void FinishMesh();
     void Render(glm::mat4 mvp);
     bool ShouldRender();
+    bool EmptyMesh();
     static void SetupShader();
     bool meshFinished = false;
 

@@ -13,6 +13,7 @@
 #include "debug.hpp"
 #include "chunkgenerator.hpp"
 #include "world/generation/terraingenerator.hpp"
+#include "world/generation/weirdgenerator.hpp"
 #include "chunkmesher.hpp"
 #include "chunkstorage.hpp"
 

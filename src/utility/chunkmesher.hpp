@@ -5,12 +5,16 @@
 #include <iostream>
 
 #include "world/chunk.hpp"
+#include "mesh.hpp"
 
 class ChunkMesher
 {
 public:
     ChunkMesher();
-    void GenerateChunkMesh(Chunk* c);
+    void GenerateChunkMesh(Chunk* c, Chunk* top, Chunk* bottom, Chunk* right, Chunk* left, Chunk* front, Chunk* back);
+private:
+    uint CHUNK_SIZE = WorldVariables::CHUNK_SIZE;
+    float VOXEL_SIZE = WorldVariables::BLOCK_SIZE;
 };
 
 #endif // CHUNKMESHER_HPP
