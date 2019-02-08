@@ -18,10 +18,10 @@ Mesh::Mesh()
 void Mesh::SetupShader()
 {
     _VoxelShader->use();
-    _VoxelShader->setVec3("GLOBAL_LIGHT_COL",    *WorldVariables::GLOBAL_LIGHT_COL);
-    _VoxelShader->setVec3("GLOBAL_LIGHT_DIR",    *WorldVariables::GLOBAL_LIGHT_DIR);
-    _VoxelShader->setVec3("CLEAR_COL",           *WorldVariables::CLEAR_COLOUR);
-    _VoxelShader->setVec3("FOG_INFO",            *WorldVariables::FOG_INFO);
+    _VoxelShader->setVec3("GLOBAL_LIGHT_COL",    WorldVariables::GLOBAL_LIGHT_COL);
+    _VoxelShader->setVec3("GLOBAL_LIGHT_DIR",    WorldVariables::GLOBAL_LIGHT_DIR);
+    _VoxelShader->setVec3("CLEAR_COL",           WorldVariables::CLEAR_COLOUR);
+    _VoxelShader->setVec3("FOG_INFO",            WorldVariables::FOG_INFO);
 
     if(WorldVariables::CULLING_ENABLED) { glEnable(GL_CULL_FACE); }
     else { glDisable(GL_CULL_FACE); }

@@ -5,15 +5,16 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
+#include <math.h>
 
 #include "world/chunk.hpp"
 #include "camera.hpp"
 #include "FastNoiseSIMD/FastNoiseSIMD.h"
 #include "utility/voxelrenderer.hpp"
 #include "debug.hpp"
-#include "chunkgenerator.hpp"
 #include "world/generation/terraingenerator.hpp"
 #include "world/generation/weirdgenerator.hpp"
+#include "chunkgenerator.hpp"
 #include "chunkmesher.hpp"
 #include "chunkstorage.hpp"
 
@@ -24,7 +25,7 @@ public:
 
     // Methods
     ~ChunkManager();
-    static ChunkManager* ChunkManagerInstance();
+    ChunkManager();
     bool BlockExistsInChunk(int x, int y, int z, int cx, int cy, int cz);
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
     void Update(Camera* camera, GLuint distance);
@@ -51,11 +52,9 @@ private:
     ChunkGenerator* _generator;
     ChunkMesher* _mesher;
     DebugObject* _debug;
-    static ChunkManager* _instance;
     glm::vec3 _curChunk = glm::vec3(0,0,0);
 
     // Methods
-    ChunkManager();
     void RequestChunks(Camera* c);
     void UpdateLoadList();
     void UpdateMeshList();

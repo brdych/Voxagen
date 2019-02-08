@@ -1,6 +1,5 @@
 #include "gui/guimanager.hpp"
-#include "utility/chunkmanager.hpp"
-#include "utility/chunkstorage.hpp"
+#include "utility/voxagenengine.hpp"
 
 GuiManager::GuiManager(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
@@ -45,7 +44,6 @@ void GuiManager::drawCameraInfoPanel(bool* p_open)
 
 void GuiManager::drawChunkInfoPanel(bool* p_open)
 {
-    ChunkManager* cm = ChunkManager::ChunkManagerInstance();
     if (!ImGui::Begin("Chunk Info", p_open))
     {
         ImGui::End();
@@ -53,7 +51,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
     }
     if (!ImGui::CollapsingHeader("LoadList"))
     {
-        ImGui::Text("List Size: %i", cm->ChunkLoadList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkLoadList->size());
         ImGui::Text("Threads: %i",WorldVariables::NUM_GEN_THREADS);
         ImGui::Text("Update Time: %.3f ms", WorldVariables::LOADLIST_TIME/1000);
         ImGui::Checkbox("Load Bounds", &WorldVariables::SHOW_LOAD_BOUNDS);
@@ -61,7 +59,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
     }
     if (!ImGui::CollapsingHeader("MeshList"))
     {
-        ImGui::Text("List Size: %i", cm->ChunkMeshList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkMeshList->size());
         ImGui::Text("Threads: %i",WorldVariables::NUM_MESH_THREADS);
         ImGui::Text("Update Time: %.3f ms", WorldVariables::MESHLIST_TIME/1000);
         ImGui::Checkbox("Mesh Bounds", &WorldVariables::SHOW_MESH_BOUNDS);
@@ -70,7 +68,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("VisibleList"))
     {
-        ImGui::Text("List Size: %i", cm->ChunkVisibleList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkVisibleList->size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::VISIBLELIST_TIME/1000);
         ImGui::Checkbox("Visible Bounds", &WorldVariables::SHOW_VISIBLE_BOUNDS);
         ImGui::Separator();
@@ -78,7 +76,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("RenderList"))
     {
-        ImGui::Text("List Size: %i", cm->ChunkRenderList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkRenderList->size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::RENDERLIST_TIME/1000);
         ImGui::Checkbox("Render Bounds", &WorldVariables::SHOW_RENDER_BOUNDS);
         ImGui::Separator();
@@ -86,7 +84,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("EmptyList"))
     {
-        ImGui::Text("List Size: %i", cm->ChunkEmptyList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkEmptyList->size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::EMPTYLIST_TIME/1000);
         ImGui::Checkbox("Empty Bounds", &WorldVariables::SHOW_EMPTY_BOUNDS);
         ImGui::Separator();
@@ -95,7 +93,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("UnloadList"))
     {
-        ImGui::Text("List Size: %i", cm->ChunkUnloadList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkUnloadList->size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::UNLOADLIST_TIME/1000);
         ImGui::Checkbox("Unload Bounds", &WorldVariables::SHOW_UNLOAD_BOUNDS);
         ImGui::Separator();
@@ -144,15 +142,15 @@ void GuiManager::drawControlPanel(Camera* c) {
     ImGui::SameLine();
     ImGui::Checkbox("Freeze RenderList",    &WorldVariables::FREEZE_RENDERLIST);
     ImGui::Separator();
-    ImGui::ColorEdit3("Clear Color",        (float*)WorldVariables::CLEAR_COLOUR);
-    ImGui::ColorEdit3("Global Light Color", (float*)WorldVariables::GLOBAL_LIGHT_COL);
-    ImGui::SliderFloat("Fog Density",       &WorldVariables::FOG_INFO->z, 0, 0.05f);
+    ImGui::ColorEdit3("Clear Color",        (float*)&WorldVariables::CLEAR_COLOUR);
+    ImGui::ColorEdit3("Global Light Color", (float*)&WorldVariables::GLOBAL_LIGHT_COL);
+    ImGui::SliderFloat("Fog Density",       &WorldVariables::FOG_INFO.z, 0, 0.05f);
     ImGui::Separator();
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGui::Separator();
     if (ImGui::Button("Update Light Pos")) {
-        WorldVariables::LIGHT_POS = new glm::vec3(c->Position);
-        WorldVariables::GLOBAL_LIGHT_DIR = new glm::vec3(c->Front);
+        WorldVariables::LIGHT_POS = glm::vec3(c->Position);
+        WorldVariables::GLOBAL_LIGHT_DIR = glm::vec3(c->Front);
     }
     ImGui::SameLine();
     if (ImGui::Button("Exit Voxagen")) {

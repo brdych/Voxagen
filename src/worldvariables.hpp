@@ -49,11 +49,11 @@ public:
     inline static bool SHOW_UNLOAD_BOUNDS =     false;
     inline static bool SHOW_EMPTY_BOUNDS =      false;
 
-    inline static glm::vec3* CLEAR_COLOUR =     new glm::vec3(0.09f, 0.09f, 1.0f);
-    inline static glm::vec3* LIGHT_POS =        new glm::vec3(-1.0f,-1.0f,-1.0f);
-    inline static glm::vec3* GLOBAL_LIGHT_DIR = new glm::vec3(-1,-2,-3);
-    inline static glm::vec3* GLOBAL_LIGHT_COL = new glm::vec3(1,1,1);
-    inline static glm::vec3* FOG_INFO =         new glm::vec3(0, 0, 0.001);
+    inline static glm::vec3 CLEAR_COLOUR =     glm::vec3(0.09f, 0.09f, 1.0f);
+    inline static glm::vec3 LIGHT_POS =        glm::vec3(-1.0f,-1.0f,-1.0f);
+    inline static glm::vec3 GLOBAL_LIGHT_DIR = glm::vec3(-1,-2,-3);
+    inline static glm::vec3 GLOBAL_LIGHT_COL = glm::vec3(1,1,1);
+    inline static glm::vec3 FOG_INFO =         glm::vec3(0, 0, 0.001);
 
     inline static glm::vec3 CUR_POS;
     inline static glm::vec3 CUR_POS_INT;

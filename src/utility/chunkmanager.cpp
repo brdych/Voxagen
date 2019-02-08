@@ -1,7 +1,4 @@
 #include "chunkmanager.hpp"
-#include "math.h"
-
-ChunkManager* ChunkManager::_instance;
 
 ChunkManager::ChunkManager()
 {
@@ -243,15 +240,6 @@ void ChunkManager::ClearRenderList()
         ChunkRenderList->clear();
 }
 
-ChunkManager* ChunkManager::ChunkManagerInstance()
-{
-    if(_instance == nullptr)
-    {
-        _instance = new ChunkManager();
-    }
-    return _instance;
-}
-
 void ChunkManager::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
 {
     auto start = std::chrono::high_resolution_clock::now();
@@ -353,31 +341,3 @@ bool ChunkManager::ChunkInViewDistance(Chunk *c)
     int cz = c->chunkZ;
     return abs(cx-cc.x) <= V_D && abs(cy-cc.y) <= V_D/2 && abs(cz-cc.z) <= V_D;
 }
-
-/*bool ChunkManager::GetBlockValue(double x, double y, double z)
-{
-    if(y<100) return true;  // Water
-    float px = x/64;
-    float py = z/64;
-
-
-    float sum = 0;
-    float freq = 0.4, amp = 1.0;
-    float seed = 0.5;
-    float octaves = 10;
-    float lacunarity = 1.96;
-    float gain = 0.4;
-
-    for (int i=0; i < octaves; i++)
-    {
-        float n = _perlin->noise(px*freq, py*freq, seed + i / 256.0);
-        sum += n*amp;
-        freq *= lacunarity;
-        amp *= gain;
-    }
-
-    //Standard Noise
-    sum = sum*150;
-
-    return (y<sum ? true:false);
-}*/
