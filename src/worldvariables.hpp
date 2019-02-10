@@ -10,7 +10,7 @@ class WorldVariables
 {
 public:
 
-    inline static float BLOCK_SIZE =    0.5f;
+    inline static float BLOCK_SIZE =    1.0f;
     inline static float DELTA_TIME =    0.0f;
     inline static float LAST_FRAME =    0.0f;
     inline static float AO_BASE =       0.1f;
@@ -23,7 +23,7 @@ public:
     inline static float EMPTYLIST_TIME = 0.0f;
     inline static float UNLOADLIST_TIME = 0.0f;
 
-    inline static int VIEW_DISTANCE = 4;
+    inline static int VIEW_DISTANCE = 10;
 
     inline static unsigned int CHUNK_SIZE = 64;
     inline static unsigned int CHUNK_UPDATES_PER_FRAME = 8;
@@ -59,6 +59,7 @@ public:
     inline static glm::vec3 CUR_POS_INT;
     inline static glm::vec3 CUR_CHUNK;
     inline static glm::vec3 CUR_POS_CHUNK;
+    inline static glm::vec3 LOOKING_AT = glm::vec3(0,0,0);
 };
 
 #endif // WORLDVARIABLES_HPP

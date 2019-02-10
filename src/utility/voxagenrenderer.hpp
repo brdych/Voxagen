@@ -9,6 +9,7 @@
 
 #include "camera.hpp"
 #include "loader.hpp"
+#include "shader.hpp"
 
 class VoxagenRenderer
 {
@@ -27,6 +28,10 @@ public:
     inline static Camera CAMERA = Camera(glm::vec3(0.0f, 100.0f, 0.0f));
     inline static Loader LOADER = Loader();
     inline static GLFWwindow* WINDOW = LOADER.LoadGL(SCR_WIDTH, SCR_HEIGHT);
+
+
+    inline static Shader TERRAIN_SHADER = Shader("../src/shaders/BlockShader.vert","../src/shaders/BlockShader.frag");
+    inline static Shader WATER_SHADER = Shader("../src/shaders/WaterShader.vert","../src/shaders/WaterShader.frag");
 
 };
 

@@ -62,7 +62,7 @@ public:
         int s = WorldVariables::CHUNK_SIZE;
         Debug_Shader.use();
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3((x*s)-0.5,(y*s)-0.5,(z*s)-0.5));
+        glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3((x*s),(y*s),(z*s)));
         model = glm::translate(model, glm::vec3(s/2,s/2,s/2));
         model = glm::scale(model, glm::vec3(s,s,s));
         glm::mat4 mvp = proj * view * model;
@@ -78,10 +78,11 @@ public:
         int s = 1;
         Debug_Shader.use();
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3(x,y,z));
+        glm::mat4 model = glm::translate(glm::mat4(1), glm::vec3(x+0.5,y+0.5,z+0.5));
         model = glm::scale(model, glm::vec3(s,s,s));
         glm::mat4 mvp = proj * view * model;
         glUniformMatrix4fv(LightMatrixID, 1, GL_FALSE, &mvp[0][0]);
+        Debug_Shader.setVec3("COL", glm::vec3(1,1,1));
         glBindVertexArray(lightVAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightEBO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);

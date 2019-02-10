@@ -1,6 +1,8 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
+#include "stb_image.h"
+
 #include <vector>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -10,6 +12,7 @@
 
 #include "worldvariables.hpp"
 #include "utility/shader.hpp"
+#include "voxagenrenderer.hpp"
 
 
 class Mesh
@@ -22,15 +25,14 @@ public:
     void StartMesh();
     void FinishMesh();
     void Render(glm::mat4 mvp);
+    void RenderWater(glm::mat4 mvp);
     bool ShouldRender();
     bool EmptyMesh();
     static void SetupShader();
+    static void SetupWaterShader();
     bool meshFinished = false;
 
 private:
-
-    static Shader* _VoxelShader;
-    static GLint _VoxelShaderMatrixID;
 
     GLuint _chunkVAO = 0, _chunkVBO = 0, _chunkEBO = 0;
     GLuint _vertexCount = 0, _indexCount = 0;

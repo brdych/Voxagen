@@ -17,10 +17,10 @@ int main()
         WorldVariables::DELTA_TIME = currentFrame - WorldVariables::LAST_FRAME;
         WorldVariables::LAST_FRAME = currentFrame;
 
-        glm::vec3 clear_color = WorldVariables::CLEAR_COLOUR;
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, 1.0f);
+        glClearColor(WorldVariables::CLEAR_COLOUR.x, WorldVariables::CLEAR_COLOUR.y, WorldVariables::CLEAR_COLOUR.z, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDepthFunc(GL_LESS);
+
 
         // Update Controller
         VoxagenEngine::INPUT_MANAGER.ProcessInput(WorldVariables::DELTA_TIME);
@@ -28,30 +28,26 @@ int main()
         //Update View
         VoxagenRenderer::VIEW_MAT = VoxagenRenderer::CAMERA.GetViewMatrix();
 
-        glm::vec3 pos = VoxagenRenderer::CAMERA.Position;
-        int cs = static_cast<int>(WorldVariables::CHUNK_SIZE);
-        int ix = static_cast<int>(pos.x), iy = static_cast<int>(pos.y), iz = static_cast<int>(pos.z);
-        WorldVariables::CUR_POS = pos;
-        WorldVariables::CUR_POS_INT = glm::vec3(ix, iy, iz);
-        WorldVariables::CUR_CHUNK = glm::vec3(ix/cs, iy/cs, iz/cs);
-        WorldVariables::CUR_POS_CHUNK = glm::vec3(abs(ix%cs), abs(iy%cs), abs(iz%cs));
-        if(pos.x<0)
+        WorldVariables::CUR_POS = VoxagenRenderer::CAMERA.Position;
+        WorldVariables::CUR_POS_INT = glm::vec3(static_cast<int>(VoxagenRenderer::CAMERA.Position.x), static_cast<int>(VoxagenRenderer::CAMERA.Position.y), static_cast<int>(VoxagenRenderer::CAMERA.Position.z));
+        WorldVariables::CUR_CHUNK = glm::vec3(static_cast<int>(VoxagenRenderer::CAMERA.Position.x)/static_cast<int>(WorldVariables::CHUNK_SIZE), static_cast<int>(VoxagenRenderer::CAMERA.Position.y)/static_cast<int>(WorldVariables::CHUNK_SIZE), static_cast<int>(VoxagenRenderer::CAMERA.Position.z)/static_cast<int>(WorldVariables::CHUNK_SIZE));
+        WorldVariables::CUR_POS_CHUNK = glm::vec3(abs(static_cast<int>(VoxagenRenderer::CAMERA.Position.x)%static_cast<int>(WorldVariables::CHUNK_SIZE)), abs(static_cast<int>(VoxagenRenderer::CAMERA.Position.y)%static_cast<int>(WorldVariables::CHUNK_SIZE)), abs(static_cast<int>(VoxagenRenderer::CAMERA.Position.z)%static_cast<int>(WorldVariables::CHUNK_SIZE)));
+        if(VoxagenRenderer::CAMERA.Position.x<0)
         {
             WorldVariables::CUR_CHUNK.x-=1;
             WorldVariables::CUR_POS_CHUNK.x = WorldVariables::CHUNK_SIZE - WorldVariables::CUR_POS_CHUNK.x;
         }
-        if(pos.y<0)
+        if(VoxagenRenderer::CAMERA.Position.y<0)
         {
             WorldVariables::CUR_CHUNK.y-=1;
             WorldVariables::CUR_POS_CHUNK.y = WorldVariables::CHUNK_SIZE - WorldVariables::CUR_POS_CHUNK.y;
         }
-        if(pos.z<0)
+        if(VoxagenRenderer::CAMERA.Position.z<0)
         {
             WorldVariables::CUR_CHUNK.z-=1;
             WorldVariables::CUR_POS_CHUNK.z = WorldVariables::CHUNK_SIZE - WorldVariables::CUR_POS_CHUNK.z;
         }
-
-        //d.DrawDebugCube(pos.x,pos.y,pos.z,proj,view);
+        WorldVariables::LOOKING_AT = WorldVariables::CUR_POS_INT + VoxagenRenderer::CAMERA.Front * 8.0f;
 
         // Update Chunks
         VoxagenEngine::CHUNK_MANAGER.Update(&VoxagenRenderer::CAMERA,0);

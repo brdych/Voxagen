@@ -9,8 +9,6 @@
 
 #include "world/chunk.hpp"
 #include "camera.hpp"
-#include "FastNoiseSIMD/FastNoiseSIMD.h"
-#include "utility/voxelrenderer.hpp"
 #include "debug.hpp"
 #include "world/generation/terraingenerator.hpp"
 #include "world/generation/weirdgenerator.hpp"
@@ -26,32 +24,31 @@ public:
     // Methods
     ~ChunkManager();
     ChunkManager();
-    bool BlockExistsInChunk(int x, int y, int z, int cx, int cy, int cz);
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
     void Update(Camera* camera, GLuint distance);
     void ClearRenderList();
 
     // Variables
     // List for requested Chunks
-    std::vector<Chunk*>* ChunkLoadList;
+    std::vector<Chunk*> ChunkLoadList;
     // List for loaded Chunks that need to be Meshed
-    std::vector<Chunk*>* ChunkMeshList;
+    std::vector<Chunk*> ChunkMeshList;
     // List for Chunks that are Meshed and may be visible
-    std::vector<Chunk*>* ChunkVisibleList;
+    std::vector<Chunk*> ChunkVisibleList;
     // List for Chunks that need to be rendered
-    std::vector<Chunk*>* ChunkRenderList;
+    std::vector<Chunk*> ChunkRenderList;
     // List for Chunks that need are Empty
-    std::vector<Chunk*>* ChunkEmptyList;
+    std::vector<Chunk*> ChunkEmptyList;
     // List for Chunks that need to be unloaded/deleted
-    std::vector<Chunk*>* ChunkUnloadList;
+    std::vector<Chunk*> ChunkUnloadList;
     // Map of all active chunks
-    ChunkStorage* ChunkStore;
+    ChunkStorage ChunkStore = ChunkStorage();
 
 private:
     // Variables
-    ChunkGenerator* _generator;
-    ChunkMesher* _mesher;
-    DebugObject* _debug;
+    ChunkGenerator _generator = ChunkGenerator(new TerrainGenerator());
+    ChunkMesher _mesher;
+    DebugObject _debug;
     glm::vec3 _curChunk = glm::vec3(0,0,0);
 
     // Methods

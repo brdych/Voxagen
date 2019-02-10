@@ -41,7 +41,7 @@ void WeirdGenerator::GenerateChunk(Chunk* c)
                 float val = p_set[index++];
                 if(val < -0.2 || val > 0.2)
                 {
-                    c->AddBlock(x,y,z);
+                    c->AddBlock(x,y,z,1);
                 }
             }
         }

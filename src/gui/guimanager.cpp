@@ -51,7 +51,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
     }
     if (!ImGui::CollapsingHeader("LoadList"))
     {
-        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkLoadList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkLoadList.size());
         ImGui::Text("Threads: %i",WorldVariables::NUM_GEN_THREADS);
         ImGui::Text("Update Time: %.3f ms", WorldVariables::LOADLIST_TIME/1000);
         ImGui::Checkbox("Load Bounds", &WorldVariables::SHOW_LOAD_BOUNDS);
@@ -59,7 +59,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
     }
     if (!ImGui::CollapsingHeader("MeshList"))
     {
-        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkMeshList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkMeshList.size());
         ImGui::Text("Threads: %i",WorldVariables::NUM_MESH_THREADS);
         ImGui::Text("Update Time: %.3f ms", WorldVariables::MESHLIST_TIME/1000);
         ImGui::Checkbox("Mesh Bounds", &WorldVariables::SHOW_MESH_BOUNDS);
@@ -68,7 +68,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("VisibleList"))
     {
-        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkVisibleList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkVisibleList.size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::VISIBLELIST_TIME/1000);
         ImGui::Checkbox("Visible Bounds", &WorldVariables::SHOW_VISIBLE_BOUNDS);
         ImGui::Separator();
@@ -76,7 +76,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("RenderList"))
     {
-        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkRenderList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkRenderList.size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::RENDERLIST_TIME/1000);
         ImGui::Checkbox("Render Bounds", &WorldVariables::SHOW_RENDER_BOUNDS);
         ImGui::Separator();
@@ -84,7 +84,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("EmptyList"))
     {
-        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkEmptyList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkEmptyList.size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::EMPTYLIST_TIME/1000);
         ImGui::Checkbox("Empty Bounds", &WorldVariables::SHOW_EMPTY_BOUNDS);
         ImGui::Separator();
@@ -93,7 +93,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("UnloadList"))
     {
-        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkUnloadList->size());
+        ImGui::Text("List Size: %i", VoxagenEngine::CHUNK_MANAGER.ChunkUnloadList.size());
         ImGui::Text("Update Time: %.3f ms", WorldVariables::UNLOADLIST_TIME/1000);
         ImGui::Checkbox("Unload Bounds", &WorldVariables::SHOW_UNLOAD_BOUNDS);
         ImGui::Separator();
@@ -101,7 +101,7 @@ void GuiManager::drawChunkInfoPanel(bool* p_open)
 
     if (!ImGui::CollapsingHeader("Chunk Storage"))
     {
-        ImGui::Text("Stored Chunks: %i (%i MB)", ChunkStorage::NUM_CHUNKS_STORED, (ChunkStorage::NUM_CHUNKS_STORED*sizeof(Chunk))/1000);
+        ImGui::Text("Stored Chunks: %i (%.3f MB)", ChunkStorage::NUM_CHUNKS_STORED, ((static_cast<double>(ChunkStorage::NUM_CHUNKS_STORED*sizeof(Chunk)))/1000)/1000);
         ImGui::Text("Chunk Load Time: %.3f ms", WorldVariables::LOADCHUNKS_TIME/1000);
         ImGui::Separator();
     }

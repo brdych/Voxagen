@@ -18,8 +18,7 @@ void Chunk::PrintDebug()
 }
 
 Chunk::Chunk(int x, int y, int z) : chunkX(x), chunkY(y), chunkZ(z) {
-    voxeldata = std::vector<bool>(CHUNK_SIZE*CHUNK_SIZE*CHUNK_SIZE, false);
-    //_renderer = new VoxelRenderer();
+    voxeldata = std::vector<unsigned char>(CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE, 0);
     _chunkSize = 0;
     _mesh = Mesh();
 }
@@ -32,24 +31,31 @@ Chunk::~Chunk()
     }
 }
 
-void Chunk::SetMesh(Mesh m)
+void Chunk::SetMesh(Mesh m, int i)
 {
-    _mesh = m;
+
+    if(i == 0)
+        _mesh = m;
+    else if(i == 1)
+        _wmesh = m;
 }
 
-Mesh* Chunk::GetMesh()
+Mesh* Chunk::GetMesh(int m)
 {
-    return &_mesh;
+    if(m == 0)
+        return &_mesh;
+    else if(m == 1)
+        return &_wmesh;
 }
 
-bool Chunk::GetBlock(uint x, uint y, uint z)
+unsigned char Chunk::GetBlock(uint x, uint y, uint z)
 {
     return voxeldata[x + CHUNK_SIZE * (y + CHUNK_SIZE * z)];
 }
 
-void Chunk::AddBlock(uint x, uint y, uint z)
+void Chunk::AddBlock(uint x, uint y, uint z, unsigned char blockType)
 {
-    voxeldata[x + CHUNK_SIZE * (y + CHUNK_SIZE * z)] = true;
+    voxeldata[x + CHUNK_SIZE * (y + CHUNK_SIZE * z)] = blockType;
     _chunkSize++;
 }
 void Chunk::RemoveBlock(uint x, uint y, uint z)
@@ -62,18 +68,23 @@ bool Chunk::ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos
 {
     if(_chunkSize < 1)
         return false;
-    if(_mesh.EmptyMesh())
+    if(_mesh.EmptyMesh() && _wmesh.EmptyMesh())
         return false;
 
-    int x = chunkX*CHUNK_SIZE+(CHUNK_SIZE/2);
-    int y = chunkY*CHUNK_SIZE+(CHUNK_SIZE/2);
-    int z = chunkZ*CHUNK_SIZE+(CHUNK_SIZE/2);
-
-    float d = glm::dot(glm::normalize(*cameraFront), glm::normalize(glm::vec3(x,y,z) - *cameraPos));
-    //std::cout << d << std::endl;
-    if(d < 0)
-        return false;
-
+    if(abs(chunkX - static_cast<int>(WorldVariables::CUR_CHUNK.x)) <= 1 &&
+       abs(chunkY - static_cast<int>(WorldVariables::CUR_CHUNK.y)) <= 1&&
+       abs(chunkZ - static_cast<int>(WorldVariables::CUR_CHUNK.z)) <= 1)
+    {
+      return true;
+    }
+    else
+    {
+        int x = chunkX*CHUNK_SIZE+(CHUNK_SIZE/2);
+        int y = chunkY*CHUNK_SIZE+(CHUNK_SIZE/2);
+        int z = chunkZ*CHUNK_SIZE+(CHUNK_SIZE/2);
+        if(glm::dot(glm::normalize(*cameraFront), glm::normalize(glm::vec3(x,y,z) - *cameraPos)) < 0)
+            return false;
+    }
     return true;
 }
 
@@ -89,4 +100,13 @@ void Chunk::Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
         *mvp = (*proj) * (*view) * glm::translate(glm::mat4(1), glm::vec3(chunkX*Chunk::CHUNK_SIZE,chunkY*Chunk::CHUNK_SIZE,chunkZ*Chunk::CHUNK_SIZE));
         _mesh.Render(*mvp);
     }
+}
+
+void Chunk::RenderWater(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp)
+{
+  if(_chunkSize > 0)
+  {
+      *mvp = (*proj) * (*view) * glm::translate(glm::mat4(1), glm::vec3(chunkX*Chunk::CHUNK_SIZE,chunkY*Chunk::CHUNK_SIZE,chunkZ*Chunk::CHUNK_SIZE));
+      _wmesh.Render(*mvp);
+  }
 }

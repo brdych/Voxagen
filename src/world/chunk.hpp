@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 
-#include "utility/voxelrenderer.hpp"
 #include "worldvariables.hpp"
 #include "utility/mesh.hpp"
 #include "glm/glm.hpp"
@@ -20,7 +19,7 @@ public:
     const int chunkY;
     const int chunkZ;
 
-    std::vector<bool> voxeldata;
+    std::vector<unsigned char> voxeldata;
 
     bool isGenerating = false;
     bool isGenerated = false;
@@ -31,14 +30,15 @@ public:
 
     //Methods
     void AddCube(uint x, uint y, uint z, glm::vec3 col);
-    bool GetBlock(uint x, uint y, uint z);
+    unsigned char GetBlock(uint x, uint y, uint z);
 
-    void AddBlock(uint x, uint y, uint z);
+    void AddBlock(uint x, uint y, uint z, unsigned char blockType);
     void RemoveBlock(uint x, uint y, uint z);
 
     void Render(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
-    void SetMesh(Mesh m);
-    Mesh* GetMesh();
+    void RenderWater(glm::mat4* view, glm::mat4* proj, glm::mat4* mvp);
+    void SetMesh(Mesh m, int i);
+    Mesh* GetMesh(int m);
     bool ShouldMesh();
     bool ShouldRender(float fov, glm::vec3* cameraFront, glm::vec3* cameraPos);
     void PrintDebug();
@@ -49,6 +49,7 @@ public:
     
 private:
     Mesh _mesh;
+    Mesh _wmesh;
     unsigned int _chunkSize;
 };
 #endif // CHUNK_HPP

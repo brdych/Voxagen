@@ -1,5 +1,8 @@
 #include "inputcontroller.hpp"
 
+#include "world/chunk.hpp"
+#include "voxagenengine.hpp"
+
 float InputController::lastX;
 float InputController::lastY;
 bool InputController::firstMouse;
@@ -42,96 +45,212 @@ void InputController::MouseCallback(GLFWwindow* window, double xpos, double ypos
     }
 }
 
-void InputController::MouseClickCallback(GLFWwindow *window, int button, int action, int mods)
+/* find maximum of a and b */
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
+/* absolute value of a */
+#define ABS(a) (((a)<0) ? -(a) : (a))
+
+/* take sign of a, either -1, 0, or 1 */
+#define ZSGN(a) (((a)<0) ? -1 : (a)>0 ? 1 : 0)
+
+bool point3d(int x, int y, int z, char bt)
 {
     int CHUNK_SIZE = WorldVariables::CHUNK_SIZE;
-    glm::vec3 cp = WorldVariables::CUR_CHUNK;
-    glm::vec3 cb = WorldVariables::CUR_POS_CHUNK;
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
-    {
-            //calculate angle vector of the mouse
-            double cursorX, cursorY;
-            glfwGetCursorPos(window, &cursorX, &cursorY);
-            float x = (2.0f * cursorX) / 1280.0f - 1.0f;
-            float y = 1.0f - (2.0f * cursorY) / 720.0f;
-            std::cout << "Cursor: " << cursorX << ", " << cursorY << std::endl;
+    Chunk* c = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunk(x/CHUNK_SIZE,y/CHUNK_SIZE,z/CHUNK_SIZE);
 
-            glm::vec4 rayClip = glm::vec4(x, y, -1.0, 1.0);
-            /*glm::vec4 rayEye = glm::inverse(projectionMatrix) * rayClip;
-            rayEye = vec4 (rayEye.v[0], rayEye.v[1], -1.0f, 0.0f);
-            glm::vec3 rayWOR = vec4(inverse(camera->getMatrix()) * rayEye);
-            rayWOR = glm::normalise(rayWOR);
-
-            float range = 64.0f; //max range to check (in voxels)
-            glm::vec3 camPos = camera->getPosition() * (1 / voxelSize);
-            float xPos = floor(camPos.v[0]);
-            float yPos = floor(camPos.v[1]);
-            float zPos = floor(camPos.v[2]);
-            int stepX = signum(rayWOR.v[0]);
-            int stepY = signum(rayWOR.v[1]);
-            int stepZ = signum(rayWOR.v[2]);
-            glm::vec3 tMax(intbound(camPos.v[0], rayWOR.v[0]), intbound(camPos.v[1], rayWOR.v[1]), intbound(camPos.v[2], rayWOR.v[2]));
-            glm::vec3 tDelta((float)stepX / rayWOR.v[0], (float)stepY / rayWOR.v[1], (float)stepZ / rayWOR.v[2]);
-            float faceX;
-            float faceY;
-            float faceZ;
-
-            std::cout << "Camera Pos: " << camPos.x << " " << camPos.y << " " << camPos.z << std::endl;
-
-            do {
-                if (isVoxelSolid(xPos,yPos,zPos)) {
-                    std::cout << "boom";
-                    if (button == GLFW_MOUSE_BUTTON_2) setVoxelType(xPos,yPos,zPos, 0, true);
-                    else setVoxelType(xPos + faceX, yPos + faceY, zPos + faceZ, 1, true);
-                    break;
-                }
-                if (tMax.v[0] < tMax.v[1]) {
-                    if (tMax.v[0] < tMax.v[2]) {
-                        if (tMax.v[0] > range) break;
-
-                        xPos += stepX;
-                        tMax.v[0] += tDelta.v[0];
-
-                        faceX = -stepX;
-                        faceY = 0;
-                        faceZ = 0;
-                    } else {
-                        if (tMax.v[2] > range) break;
-                        zPos += stepZ;
-                        tMax.v[2] += tDelta.v[2];
-                        faceX = 0;
-                        faceY = 0;
-                        faceZ = -stepZ;
-                    }
-                } else {
-                    if (tMax.v[1] < tMax.v[2]) {
-                        if (tMax.v[1] > range) break;
-                        yPos += stepY;
-                        tMax.v[1] += tDelta.v[1];
-                        faceX = 0;
-                        faceY = -stepY;
-                        faceZ = 0;
-                    } else {
-                        if (tMax.v[2] > range) break;
-                        zPos += stepZ;
-                        tMax.v[2] += tDelta.v[2];
-                        faceX = 0;
-                        faceY = 0;
-                        faceZ = -stepZ;
-                    }
-                }
-            } while (true);
-        }*/
-    }
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
-        /*Chunk* c = VoxagenEngine::CHUNK_MANAGER.ChunkStore->GetChunk(cp.x,cp.y,cp.z);
-        if(c->isMeshed)
+    //if(c->GetBlock(x%CHUNK_SIZE, y%CHUNK_SIZE, z%CHUNK_SIZE) > 0)
+    //{
+        if(bt < 1)
         {
-            c->RemoveBlock(cb.x,cb.y,cb.z);
-            c->isMeshed = false;
-            c->isMeshing = false;
-        }*/
+            c->RemoveBlock(x%CHUNK_SIZE, y%CHUNK_SIZE, z%CHUNK_SIZE);
+        }
+        else
+        {
+            c->AddBlock(x%CHUNK_SIZE, y%CHUNK_SIZE, z%CHUNK_SIZE, bt);
+        }
+
+        c->rebuild = true;
+        c->isMeshed = false;
+        c->isMeshing = false;
+
+        if((x%CHUNK_SIZE < 1 || y%CHUNK_SIZE <1 || z%CHUNK_SIZE < 1) || (x%CHUNK_SIZE >=CHUNK_SIZE-1 || y%CHUNK_SIZE >= CHUNK_SIZE-1 || z%CHUNK_SIZE >= CHUNK_SIZE-1))
+        {
+            Chunk* top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunk(c->chunkX, c->chunkY+1, c->chunkZ);
+            top->rebuild = true;
+            top->isMeshed = false;
+            top->isMeshing = false;
+
+            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunk(c->chunkX, c->chunkY-1, c->chunkZ);
+            top->rebuild = true;
+            top->isMeshed = false;
+            top->isMeshing = false;
+
+            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunk(c->chunkX+1, c->chunkY, c->chunkZ);
+            top->rebuild = true;
+            top->isMeshed = false;
+            top->isMeshing = false;
+
+            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunk(c->chunkX-1, c->chunkY, c->chunkZ);
+            top->rebuild = true;
+            top->isMeshed = false;
+            top->isMeshing = false;
+
+            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunk(c->chunkX, c->chunkY, c->chunkZ+1);
+            top->rebuild = true;
+            top->isMeshed = false;
+            top->isMeshing = false;
+
+            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunk(c->chunkX, c->chunkY, c->chunkZ-1);
+            top->rebuild = true;
+            top->isMeshed = false;
+            top->isMeshing = false;
+        }
+        return true;
+    //}WW
+    return false;
+}
+
+void raycast(char bt)
+{
+    int x1 = WorldVariables::CUR_POS_INT.x, y1 = WorldVariables::CUR_POS_INT.y, z1 = WorldVariables::CUR_POS_INT.z;
+    int x2 = static_cast<int>(WorldVariables::LOOKING_AT.x), y2 = static_cast<int>(WorldVariables::LOOKING_AT.y), z2 = static_cast<int>(WorldVariables::LOOKING_AT.z);
+
+    int xd, yd, zd;
+    int x, y, z;
+    int ax, ay, az;
+    int sx, sy, sz;
+    int dx, dy, dz;
+
+    dx = x2 - x1;
+    dy = y2 - y1;
+    dz = z2 - z1;
+
+    ax = ABS(dx) << 1;
+    ay = ABS(dy) << 1;
+    az = ABS(dz) << 1;
+
+    sx = ZSGN(dx);
+    sy = ZSGN(dy);
+    sz = ZSGN(dz);
+
+    x = x1;
+    y = y1;
+    z = z1;
+
+    if (ax >= MAX(ay, az))            /* x dominant */
+    {
+        yd = ay - (ax >> 1);
+        zd = az - (ax >> 1);
+        for (;;)
+        {
+            if(point3d(x, y, z, bt))
+            {
+                return;
+            }
+
+            if (x == x2)
+            {
+                return;
+            }
+
+            if (yd >= 0)
+            {
+                y += sy;
+                yd -= ax;
+            }
+
+            if (zd >= 0)
+            {
+                z += sz;
+                zd -= ax;
+            }
+
+            x += sx;
+            yd += ay;
+            zd += az;
+        }
+    }
+    else if (ay >= MAX(ax, az))            /* y dominant */
+    {
+        xd = ax - (ay >> 1);
+        zd = az - (ay >> 1);
+        for (;;)
+        {
+            if(point3d(x, y, z, bt))
+            {
+                return;
+            }
+
+            if (y == y2)
+            {
+                return;
+            }
+
+            if (xd >= 0)
+            {
+                x += sx;
+                xd -= ay;
+            }
+
+            if (zd >= 0)
+            {
+                z += sz;
+                zd -= ay;
+            }
+
+            y += sy;
+            xd += ax;
+            zd += az;
+        }
+    }
+    else if (az >= MAX(ax, ay))            /* z dominant */
+    {
+        xd = ax - (az >> 1);
+        yd = ay - (az >> 1);
+        for (;;)
+        {
+            if(point3d(x, y, z, bt))
+            {
+                return;
+            }
+
+            if (z == z2)
+            {
+                return;
+            }
+
+            if (xd >= 0)
+            {
+                x += sx;
+                xd -= az;
+            }
+
+            if (yd >= 0)
+            {
+                y += sy;
+                yd -= az;
+            }
+
+            z += sz;
+            xd += ax;
+            yd += ay;
+        }
+    }
+}
+
+void InputController::MouseClickCallback(GLFWwindow *window, int button, int action, int mods)
+{
+    if(button == GLFW_MOUSE_BUTTON_RIGHT || button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        {
+            //point3d(WorldVariables::LOOKING_AT.x, WorldVariables::LOOKING_AT.y, WorldVariables::LOOKING_AT.z, 3);
+        }
+        else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+        {
+            //point3d(WorldVariables::LOOKING_AT.x, WorldVariables::LOOKING_AT.y, WorldVariables::LOOKING_AT.z, 0);
+        }
     }
 }
 

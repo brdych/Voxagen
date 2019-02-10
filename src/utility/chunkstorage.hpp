@@ -29,7 +29,7 @@ public:
     static int NUM_CHUNKS_STORED;
 
 private:
-    std::unordered_map<std::string, Chunk*>* _chunks;
+    std::unordered_map<std::string, Chunk*> _chunks;
     std::mutex _mapLock;
 };
 

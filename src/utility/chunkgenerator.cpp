@@ -17,6 +17,6 @@ ChunkGenerator::~ChunkGenerator()
 
 void ChunkGenerator::GenerateChunk(Chunk* c)
 {
-    std::thread t(GenChunk,c,generator);
+    std::thread t(GenChunk, c, generator);
     t.detach();
 }

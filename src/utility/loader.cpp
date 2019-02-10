@@ -48,6 +48,10 @@ GLFWwindow* Loader::LoadGL(int width, int height)
     GLFWimage icons[1];
     icons[0].pixels = stbi_load("../src/textures/voxagen_128.png", &icons[0].width, &icons[0].height, nullptr, 0);
     glfwSetWindowIcon(window, 1, icons);
+    stbi_image_free(icons->pixels);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     return window;
 }

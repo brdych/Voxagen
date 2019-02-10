@@ -4,24 +4,22 @@ int ChunkStorage::NUM_CHUNKS_STORED = 0;
 
 ChunkStorage::ChunkStorage()
 {
-    _chunks = new std::unordered_map<std::string, Chunk*>();
+    _chunks = std::unordered_map<std::string, Chunk*>();
 }
 
 ChunkStorage::~ChunkStorage()
 {
     std::cout << "\t\tDeleting Chunks" << std::endl;
-    for(std::pair<std::string, Chunk*> c: *_chunks) { delete c.second; }
+    for(std::pair<std::string, Chunk*> c: _chunks) { delete c.second; }
     std::cout << "\t\tClearing List" << std::endl;
-    _chunks->clear();
-    std::cout << "\t\tDeleting List" << std::endl;
-    delete _chunks;
+    _chunks.clear();
 }
 
 Chunk* ChunkStorage::InsertChunk(int x, int y, int z)
 {
     Chunk* c = new Chunk(x,y,z);
     _mapLock.lock();
-        _chunks->emplace(ChunkHash(x,y,z),c);
+        _chunks.emplace(ChunkHash(x,y,z),c);
     _mapLock.unlock();
     NUM_CHUNKS_STORED++;
     return c;
@@ -30,13 +28,13 @@ Chunk* ChunkStorage::InsertChunk(int x, int y, int z)
 Chunk* ChunkStorage::GetChunk(int x, int y, int z)
 {
     std::string h = ChunkHash(x,y,z);
-    Chunk* c = _chunks->at(h);
+    Chunk* c = _chunks.at(h);
     return c;
 }
 
 Chunk* ChunkStorage::GetChunk(std::string h)
 {
-    Chunk* c = _chunks->at(h);
+    Chunk* c = _chunks.at(h);
     return c;
 }
 
@@ -46,8 +44,8 @@ void ChunkStorage::DeleteChunk(int x, int y, int z)
     if(ChunkExists(h))
     {
         _mapLock.lock();
-            delete _chunks->at(h);
-            _chunks->erase(_chunks->find(h));
+            delete _chunks.at(h);
+            _chunks.erase(_chunks.find(h));
         _mapLock.unlock();
         NUM_CHUNKS_STORED--;
     }
@@ -58,8 +56,8 @@ void ChunkStorage::DeleteChunk(std::string h)
     if(ChunkExists(h))
     {
         _mapLock.lock();
-            delete _chunks->at(h);
-            _chunks->erase(_chunks->find(h));
+            delete _chunks.at(h);
+            _chunks.erase(_chunks.find(h));
         _mapLock.unlock();
         NUM_CHUNKS_STORED--;
     }
@@ -68,7 +66,7 @@ void ChunkStorage::DeleteChunk(std::string h)
 bool ChunkStorage::ChunkExists(int x, int y, int z)
 {
     _mapLock.lock();
-        bool val = _chunks->find(ChunkHash(x,y,z)) != _chunks->end();
+        bool val = _chunks.find(ChunkHash(x,y,z)) != _chunks.end();
     _mapLock.unlock();
     return val;
 }
@@ -76,7 +74,7 @@ bool ChunkStorage::ChunkExists(int x, int y, int z)
 bool ChunkStorage::ChunkExists(std::string h)
 {
     _mapLock.lock();
-        bool val = _chunks->find(h) != _chunks->end();
+        bool val = _chunks.find(h) != _chunks.end();
     _mapLock.unlock();
     return val;
 }
