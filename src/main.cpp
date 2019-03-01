@@ -4,12 +4,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "worldvariables.hpp"
-#include "utility/voxagenrenderer.hpp"
-#include "utility/voxagenengine.hpp"
+#include "utility/Voxagen/voxagenrenderer.hpp"
+#include "utility/Voxagen/voxagenengine.hpp"
 
 int main()
 {
-    cout << "Voxagen Started!" << endl;
+    std::cout << "Voxagen Started!" << std::endl;
     while(!glfwWindowShouldClose(VoxagenRenderer::WINDOW)&&!WorldVariables::PROGRAM_SHOULD_EXIT)
     {
         // Input
@@ -25,9 +25,10 @@ int main()
         // Update Controller
         VoxagenEngine::INPUT_MANAGER.ProcessInput(WorldVariables::DELTA_TIME);
 
-        //Update View
+        // Update View
         VoxagenRenderer::VIEW_MAT = VoxagenRenderer::CAMERA.GetViewMatrix();
 
+        // Update Position Variables
         WorldVariables::CUR_POS = VoxagenRenderer::CAMERA.Position;
         WorldVariables::CUR_POS_INT = glm::vec3(static_cast<int>(VoxagenRenderer::CAMERA.Position.x), static_cast<int>(VoxagenRenderer::CAMERA.Position.y), static_cast<int>(VoxagenRenderer::CAMERA.Position.z));
         WorldVariables::CUR_CHUNK = glm::vec3(static_cast<int>(VoxagenRenderer::CAMERA.Position.x)/static_cast<int>(WorldVariables::CHUNK_SIZE), static_cast<int>(VoxagenRenderer::CAMERA.Position.y)/static_cast<int>(WorldVariables::CHUNK_SIZE), static_cast<int>(VoxagenRenderer::CAMERA.Position.z)/static_cast<int>(WorldVariables::CHUNK_SIZE));
@@ -47,16 +48,16 @@ int main()
             WorldVariables::CUR_CHUNK.z-=1;
             WorldVariables::CUR_POS_CHUNK.z = WorldVariables::CHUNK_SIZE - WorldVariables::CUR_POS_CHUNK.z;
         }
-        WorldVariables::LOOKING_AT = WorldVariables::CUR_POS_INT + VoxagenRenderer::CAMERA.Front * 8.0f;
+        WorldVariables::LOOKING_AT = static_cast<glm::vec3>(WorldVariables::CUR_POS_INT) + VoxagenRenderer::CAMERA.Front * 8.0f;
 
         // Update Chunks
-        VoxagenEngine::CHUNK_MANAGER.Update(&VoxagenRenderer::CAMERA,0);
+        VoxagenEngine::CHUNK_MANAGER.Update();
 
         // Render Chunks
         VoxagenEngine::CHUNK_MANAGER.Render(&VoxagenRenderer::VIEW_MAT, &VoxagenRenderer::PROJ_MAT, &VoxagenRenderer::MVP_MAT);
 
         // Render Dear ImGui
-        if(WorldVariables::MENU) { VoxagenEngine::GUI_MANAGER.drawControlPanel(&VoxagenRenderer::CAMERA); }
+        if(WorldVariables::MENU) { VoxagenEngine::GUI_MANAGER.drawControlPanel(); }
 
         // Clear RenderList for next frame
         VoxagenEngine::CHUNK_MANAGER.ClearRenderList();
@@ -64,6 +65,6 @@ int main()
         glfwSwapBuffers(VoxagenRenderer::WINDOW);
         glfwPollEvents();
     }
-    cout << "Shutting Down Voxagen!" << endl;
+    std::cout << "Shutting Down Voxagen!" << std::endl;
     return 0;
 }

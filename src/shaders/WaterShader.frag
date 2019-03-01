@@ -32,7 +32,7 @@ void main()
     vec3 lightColor = (ambient+diffuse) * fragmentCol;
     vec3 col = mix(clearCol, lightColor, fogFactor);
 
-    color = vec4(col.x, col.y, col.z, 0.5f);
+    color = vec4(col.x, col.y, col.z, 0.8f);
 
     //color = mix(color, texture2D(normalMap, fragPos.xz/10), 0.9);
 
