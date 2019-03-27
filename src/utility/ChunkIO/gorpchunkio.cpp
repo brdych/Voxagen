@@ -1,11 +1,11 @@
 #include "gorpchunkio.hpp"
 
-GorpChunkIO::GorpChunkIO()
+GorbChunkIO::GorbChunkIO()
 {
 
 }
 
-GorpChunkIO::~GorpChunkIO()
+GorbChunkIO::~GorbChunkIO()
 {
 
 }
@@ -15,19 +15,20 @@ void GorpSave(Chunk* c)
     std::cout << "Saving Chunk: " << c->chunkX << " " << c->chunkY << " " << c->chunkZ << std::endl;
 }
 
-void GorpLoad(Chunk* c)
+int GorpLoad(Chunk* c)
 {
+    //return 1 if file exists
     std::cout << "Loading Chunk: " << c->chunkX << " " << c->chunkY << " " << c->chunkZ << std::endl;
+    return 0;
 }
 
-void GorpChunkIO::SaveChunk(Chunk* c)
+void GorbChunkIO::SaveChunk(Chunk* c)
 {
     std::thread t(GorpSave, c);
     t.detach();
 }
 
-void GorpChunkIO::LoadChunk(Chunk* c)
+int GorbChunkIO::LoadChunk(Chunk* c)
 {
-    std::thread t(GorpLoad, c);
-    t.detach();
+    return GorpLoad(c);
 }

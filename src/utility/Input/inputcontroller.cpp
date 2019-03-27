@@ -2,25 +2,123 @@
 
 #include "utility/Chunk/chunk.hpp"
 #include "utility/Voxagen/voxagenengine.hpp"
+#include "utility/Chunk/chunkhelper.hpp"
 
 float InputController::lastX;
 float InputController::lastY;
 bool InputController::firstMouse;
 bool InputController::free_mouse;
 bool InputController::alt_pressed;
+bool InputController::key_down;
 
 InputController::InputController()
 {
-    lastX = VoxagenRenderer::SCR_WIDTH / 2.0f;
-    lastY = VoxagenRenderer::SCR_HEIGHT / 2.0f;
+    lastX = VoxagenEngine::SCR_WIDTH / 2.0f;
+    lastY = VoxagenEngine::SCR_HEIGHT / 2.0f;
     firstMouse = true;
     free_mouse = false;
     alt_pressed = false;
+    key_down = false;
 
-    glfwSetCursorPosCallback(VoxagenRenderer::WINDOW,MouseCallback);
-    glfwSetScrollCallback(VoxagenRenderer::WINDOW, ScrollCallback);
-    glfwSetMouseButtonCallback(VoxagenRenderer::WINDOW, MouseClickCallback);
-    glfwSetInputMode(VoxagenRenderer::WINDOW, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetKeyCallback(VoxagenEngine::WINDOW, KeyCallback);
+    glfwSetCursorPosCallback(VoxagenEngine::WINDOW,MouseCallback);
+    glfwSetScrollCallback(VoxagenEngine::WINDOW, ScrollCallback);
+    glfwSetMouseButtonCallback(VoxagenEngine::WINDOW, MouseClickCallback);
+    glfwSetInputMode(VoxagenEngine::WINDOW, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void InputController::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if(WorldVariables::EDIT_MODE)
+    {
+        if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+        {
+            WorldVariables::EDIT_POS.y--;
+        }
+        if (key == GLFW_KEY_E && action == GLFW_PRESS)
+        {
+            WorldVariables::EDIT_POS.y++;
+        }
+
+        int dir = WorldVariables::CARDINAL_DIRECTION;
+        if (key == GLFW_KEY_W && action == GLFW_PRESS)
+        {
+            if(dir == 1)      //North Pos X
+            {
+                WorldVariables::EDIT_POS.x++;
+            }
+            else if(dir == 2) //East Pos Z
+            {
+                WorldVariables::EDIT_POS.z++;
+            }
+            else if(dir == 3) //South Neg X
+            {
+                WorldVariables::EDIT_POS.x--;
+            }
+            else                //East Neg Z
+            {
+                WorldVariables::EDIT_POS.z--;
+            }
+        }
+        if (key == GLFW_KEY_S && action == GLFW_PRESS)
+        {
+            if(dir == 1)
+            {
+                WorldVariables::EDIT_POS.x--;
+            }
+            else if(dir == 2)
+            {
+                WorldVariables::EDIT_POS.z--;
+            }
+            else if(dir == 3)
+            {
+                WorldVariables::EDIT_POS.x++;
+            }
+            else
+            {
+                WorldVariables::EDIT_POS.z++;
+            }
+        }
+
+        if (key == GLFW_KEY_A && action == GLFW_PRESS)
+        {
+            if(dir == 1)
+            {
+                WorldVariables::EDIT_POS.z--;
+            }
+            else if(dir == 2)
+            {
+                WorldVariables::EDIT_POS.x++;
+            }
+            else if(dir == 3)
+            {
+                WorldVariables::EDIT_POS.z++;
+            }
+            else
+            {
+                WorldVariables::EDIT_POS.x--;
+            }
+        }
+        if (key == GLFW_KEY_D && action == GLFW_PRESS)
+        {
+            if(dir == 1)
+            {
+                WorldVariables::EDIT_POS.z++;
+            }
+            else if(dir == 2)
+            {
+                WorldVariables::EDIT_POS.x--;
+            }
+            else if(dir == 3)
+            {
+                WorldVariables::EDIT_POS.z--;
+            }
+            else
+            {
+                WorldVariables::EDIT_POS.x++;
+            }
+        }
+    }
 }
 
 void InputController::MouseCallback(GLFWwindow* window, double xpos, double ypos)
@@ -37,7 +135,7 @@ void InputController::MouseCallback(GLFWwindow* window, double xpos, double ypos
         float yoffset = lastY - ypos;
         lastX = xpos;
         lastY = ypos;
-        VoxagenRenderer::CAMERA.ProcessMouseMovement(xoffset, yoffset);
+        VoxagenEngine::CAMERA.ProcessMouseMovement(xoffset, yoffset);
     }
     else
     {
@@ -54,250 +152,124 @@ void InputController::MouseCallback(GLFWwindow* window, double xpos, double ypos
 /* take sign of a, either -1, 0, or 1 */
 #define ZSGN(a) (((a)<0) ? -1 : (a)>0 ? 1 : 0)
 
-bool point3d(int x, int y, int z, char bt)
-{
-    int CHUNK_SIZE = WorldVariables::CHUNK_SIZE;
-    Chunk* c = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(x/CHUNK_SIZE,y/CHUNK_SIZE,z/CHUNK_SIZE);
-
-    //if(c->GetBlock(x%CHUNK_SIZE, y%CHUNK_SIZE, z%CHUNK_SIZE) > 0)
-    //{
-        if(bt < 1)
-        {
-            c->RemoveBlock(x%CHUNK_SIZE, y%CHUNK_SIZE, z%CHUNK_SIZE);
-        }
-        else
-        {
-            c->AddBlock(x%CHUNK_SIZE, y%CHUNK_SIZE, z%CHUNK_SIZE, bt);
-        }
-
-        c->rebuild = true;
-        c->isMeshed = false;
-        c->isMeshing = false;
-
-        if((x%CHUNK_SIZE < 1 || y%CHUNK_SIZE <1 || z%CHUNK_SIZE < 1) || (x%CHUNK_SIZE >=CHUNK_SIZE-1 || y%CHUNK_SIZE >= CHUNK_SIZE-1 || z%CHUNK_SIZE >= CHUNK_SIZE-1))
-        {
-            Chunk* top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY+1, c->chunkZ);
-            top->rebuild = true;
-            top->isMeshed = false;
-            top->isMeshing = false;
-
-            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY-1, c->chunkZ);
-            top->rebuild = true;
-            top->isMeshed = false;
-            top->isMeshing = false;
-
-            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX+1, c->chunkY, c->chunkZ);
-            top->rebuild = true;
-            top->isMeshed = false;
-            top->isMeshing = false;
-
-            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX-1, c->chunkY, c->chunkZ);
-            top->rebuild = true;
-            top->isMeshed = false;
-            top->isMeshing = false;
-
-            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY, c->chunkZ+1);
-            top->rebuild = true;
-            top->isMeshed = false;
-            top->isMeshing = false;
-
-            top = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY, c->chunkZ-1);
-            top->rebuild = true;
-            top->isMeshed = false;
-            top->isMeshing = false;
-        }
-        return true;
-    //}WW
-    return false;
-}
-
-void raycast(char bt)
-{
-    int x1 = WorldVariables::CUR_POS_INT.x, y1 = WorldVariables::CUR_POS_INT.y, z1 = WorldVariables::CUR_POS_INT.z;
-    int x2 = static_cast<int>(WorldVariables::LOOKING_AT.x), y2 = static_cast<int>(WorldVariables::LOOKING_AT.y), z2 = static_cast<int>(WorldVariables::LOOKING_AT.z);
-
-    int xd, yd, zd;
-    int x, y, z;
-    int ax, ay, az;
-    int sx, sy, sz;
-    int dx, dy, dz;
-
-    dx = x2 - x1;
-    dy = y2 - y1;
-    dz = z2 - z1;
-
-    ax = ABS(dx) << 1;
-    ay = ABS(dy) << 1;
-    az = ABS(dz) << 1;
-
-    sx = ZSGN(dx);
-    sy = ZSGN(dy);
-    sz = ZSGN(dz);
-
-    x = x1;
-    y = y1;
-    z = z1;
-
-    if (ax >= MAX(ay, az))            /* x dominant */
-    {
-        yd = ay - (ax >> 1);
-        zd = az - (ax >> 1);
-        for (;;)
-        {
-            if(point3d(x, y, z, bt))
-            {
-                return;
-            }
-
-            if (x == x2)
-            {
-                return;
-            }
-
-            if (yd >= 0)
-            {
-                y += sy;
-                yd -= ax;
-            }
-
-            if (zd >= 0)
-            {
-                z += sz;
-                zd -= ax;
-            }
-
-            x += sx;
-            yd += ay;
-            zd += az;
-        }
-    }
-    else if (ay >= MAX(ax, az))            /* y dominant */
-    {
-        xd = ax - (ay >> 1);
-        zd = az - (ay >> 1);
-        for (;;)
-        {
-            if(point3d(x, y, z, bt))
-            {
-                return;
-            }
-
-            if (y == y2)
-            {
-                return;
-            }
-
-            if (xd >= 0)
-            {
-                x += sx;
-                xd -= ay;
-            }
-
-            if (zd >= 0)
-            {
-                z += sz;
-                zd -= ay;
-            }
-
-            y += sy;
-            xd += ax;
-            zd += az;
-        }
-    }
-    else if (az >= MAX(ax, ay))            /* z dominant */
-    {
-        xd = ax - (az >> 1);
-        yd = ay - (az >> 1);
-        for (;;)
-        {
-            if(point3d(x, y, z, bt))
-            {
-                return;
-            }
-
-            if (z == z2)
-            {
-                return;
-            }
-
-            if (xd >= 0)
-            {
-                x += sx;
-                xd -= az;
-            }
-
-            if (yd >= 0)
-            {
-                y += sy;
-                yd -= az;
-            }
-
-            z += sz;
-            xd += ax;
-            yd += ay;
-        }
-    }
-}
-
 void InputController::MouseClickCallback(GLFWwindow *window, int button, int action, int mods)
 {
-    if((button == GLFW_MOUSE_BUTTON_RIGHT || button == GLFW_MOUSE_BUTTON_LEFT) && WorldVariables::EDIT_MODE)
+    if((button == GLFW_MOUSE_BUTTON_RIGHT || button == GLFW_MOUSE_BUTTON_LEFT) && WorldVariables::EDIT_MODE && !free_mouse)
     {
+        int CHUNK_SIZE = WorldVariables::CHUNK_SIZE;
+        auto c = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(WorldVariables::EDIT_CHUNK.x, WorldVariables::EDIT_CHUNK.y, WorldVariables::EDIT_CHUNK.z);
+        bool update = false;
+        int x = WorldVariables::EDIT_CHUNK_POS.x;
+        int y = WorldVariables::EDIT_CHUNK_POS.y;
+        int z = WorldVariables::EDIT_CHUNK_POS.z;
         if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
         {
-            point3d(WorldVariables::LOOKING_AT.x, WorldVariables::LOOKING_AT.y, WorldVariables::LOOKING_AT.z, 3);
+            if(c->GetBlock(x,y,z) == 0)
+            {
+                c->AddBlock(x,y,z, WorldVariables::SELECTED_BLOCK);
+                update = true;
+            }
         }
         else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
         {
-            point3d(WorldVariables::LOOKING_AT.x, WorldVariables::LOOKING_AT.y, WorldVariables::LOOKING_AT.z, 0);
+            if(c->GetBlock(x,y,z) != 0)
+            {
+                c->RemoveBlock(x, y, z);
+                update = true;
+            }
+        }
+
+        if(update)
+        {
+            c->rebuild = true;
+            c->forceRemesh = true;
+            c->isMeshed = false;
+            c->isMeshing = false;
+            if(!c->playerData)
+            {
+                c->playerData = true;
+            }
+
+            if((x < 1 || y <1 || z < 1) || (x >=CHUNK_SIZE-1 || y >= CHUNK_SIZE-1 || z >= CHUNK_SIZE-1))
+            {
+                auto a = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY+1, c->chunkZ);
+                a->rebuild = true;
+                a->isMeshed = false;
+                a->isMeshing = false;
+
+                a = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY-1, c->chunkZ);
+                a->rebuild = true;
+                a->isMeshed = false;
+                a->isMeshing = false;
+
+                a = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX+1, c->chunkY, c->chunkZ);
+                a->rebuild = true;
+                a->isMeshed = false;
+                a->isMeshing = false;
+
+                a = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX-1, c->chunkY, c->chunkZ);
+                a->rebuild = true;
+                a->isMeshed = false;
+                a->isMeshing = false;
+
+                a = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY, c->chunkZ+1);
+                a->rebuild = true;
+                a->isMeshed = false;
+                a->isMeshing = false;
+
+                a = VoxagenEngine::CHUNK_MANAGER.ChunkStore.GetChunkV2(c->chunkX, c->chunkY, c->chunkZ-1);
+                a->rebuild = true;
+                a->isMeshed = false;
+                a->isMeshing = false;
+            }
         }
     }
 }
 
 void InputController::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    VoxagenRenderer::CAMERA.ProcessMouseScroll(xoffset);
+    VoxagenEngine::CAMERA.ProcessMouseScroll(xoffset, yoffset);
 }
 
 void InputController::ProcessInput(float deltaTime)
 {
-    if (glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(VoxagenRenderer::WINDOW, true);
-    if (glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_W) == GLFW_PRESS)
-        VoxagenRenderer::CAMERA.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_S) == GLFW_PRESS)
-        VoxagenRenderer::CAMERA.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_A) == GLFW_PRESS)
-        VoxagenRenderer::CAMERA.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_D) == GLFW_PRESS)
-        VoxagenRenderer::CAMERA.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(VoxagenEngine::WINDOW, true);
+    if (glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_W) == GLFW_PRESS)
+        VoxagenEngine::CAMERA.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_S) == GLFW_PRESS)
+        VoxagenEngine::CAMERA.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_A) == GLFW_PRESS)
+        VoxagenEngine::CAMERA.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_D) == GLFW_PRESS)
+        VoxagenEngine::CAMERA.ProcessKeyboard(RIGHT, deltaTime);
 
-    if(glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+    if(glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
     {
         if(!free_mouse && !alt_pressed)
         {
             alt_pressed = true;
             free_mouse = true;
             WorldVariables::MENU = true;
-            glfwSetInputMode(VoxagenRenderer::WINDOW, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(VoxagenEngine::WINDOW, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
         else if (free_mouse && !alt_pressed)
         {
             free_mouse = false;
             alt_pressed = true;
-            glfwSetInputMode(VoxagenRenderer::WINDOW, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(VoxagenEngine::WINDOW, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
     }
-    if(glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE)
+    if(glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_LEFT_ALT) == GLFW_RELEASE)
     {
         alt_pressed = false;
     }
-    if(glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    if(glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
-        VoxagenRenderer::CAMERA.SpeedToggle = true;
+        VoxagenEngine::CAMERA.SpeedToggle = true;
     }
-    if(glfwGetKey(VoxagenRenderer::WINDOW, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
+    if(glfwGetKey(VoxagenEngine::WINDOW, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
     {
-        VoxagenRenderer::CAMERA.SpeedToggle = false;
+        VoxagenEngine::CAMERA.SpeedToggle = false;
     }
 }

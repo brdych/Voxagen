@@ -3,13 +3,13 @@
 
 #include "chunkio.hpp"
 
-class GorpChunkIO : public ChunkIO
+class GorbChunkIO : public ChunkIO
 {
 public:
-    GorpChunkIO();
-    ~GorpChunkIO();
+    GorbChunkIO();
+    ~GorbChunkIO();
     void SaveChunk(Chunk* c);
-    void LoadChunk(Chunk* c);
+    int LoadChunk(Chunk* c);
 };
 
 #endif // GORPCHUNKIO_HPP

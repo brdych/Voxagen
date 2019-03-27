@@ -28,6 +28,7 @@ public:
     void Update();
     void ClearRenderList();
     void Reset();
+    void SaveChunks();
 
     // Variables
     // List for requested Chunks
@@ -44,18 +45,15 @@ public:
     std::vector<Chunk*> ChunkUnloadList;
     // Map of all active chunks
     ChunkStorage ChunkStore = ChunkStorage();
-    uint CurrentThreads = 0;
-
-
 
 private:
     // Variables
     ChunkGenerator _generator = ChunkGenerator(new TerrainGenerator());
     ChunkMesher _mesher;
     DebugObject _debug;
-    glm::vec3 _curChunk = glm::vec3(0,0,0);
+    glm::ivec3 _curChunk = glm::vec3(0,0,0);
     bool _refresh = false;
-    uint _threadcount = std::thread::hardware_concurrency() > 2 ? std::thread::hardware_concurrency()-2 : 1;
+    int _numThreads = 0;
 
     // Methods
     void RequestChunks();
@@ -66,8 +64,6 @@ private:
     void UpdateUnloadList();
     bool ChunkInViewDistance(Chunk* c);
     bool ChunkInViewDistance(int x, int y, int z);
-
-    void SaveChunks();
 };
 
 #endif // CHUNKMANAGER_HPP

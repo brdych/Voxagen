@@ -24,7 +24,8 @@ public:
     inline static float UNLOADLIST_TIME = 0.0f;
 
     inline static int VIEW_DISTANCE = 10;
-    inline static int CHUNKSTORE_STORED_BYTES = 0;
+    inline static float CULL_VALUE = 0.48;
+    inline static long long int CHUNKSTORE_STORED_BYTES = 0;
 
     inline static unsigned int CHUNK_SIZE = 64;
     inline static unsigned int CHUNK_UPDATES_PER_FRAME = 8;
@@ -47,9 +48,6 @@ public:
     inline static bool SHOW_RENDER_BOUNDS =     false;
     inline static bool SHOW_UNLOAD_BOUNDS =     false;
     inline static bool SHOW_EMPTY_BOUNDS =      false;
-    inline static bool SAVE_CHUNK_STORE =       false;
-    inline static bool LOAD_CHUNKS_FROM_FILE =  false;
-    inline static bool USE_GORP =               false;
 
     inline static glm::vec3 CLEAR_COLOUR =     glm::vec3(0.09f, 0.09f, 1.0f);
     inline static glm::vec3 LIGHT_POS =        glm::vec3(-1.0f,-1.0f,-1.0f);
@@ -62,6 +60,19 @@ public:
     inline static glm::ivec3 CUR_POS_INT;
     inline static glm::ivec3 CUR_CHUNK;
     inline static glm::ivec3 CUR_POS_CHUNK;
+
+    inline static glm::ivec3 EDIT_POS = glm::ivec3(0,0,0);
+    inline static glm::ivec3 EDIT_CHUNK_POS = glm::ivec3(0,0,0);
+    inline static glm::ivec3 EDIT_CHUNK = glm::ivec3(0,0,0);
+    inline static bool ENTERED_EDIT_MODE = false;
+    inline static int CARDINAL_DIRECTION = 0;
+    inline static int SELECTED_BLOCK = 3;
+    inline static bool GRAVITY = false;
+    inline static bool STOP_EFFECTS = false;
+
+    inline static glm::ivec3 CORNER_1 = glm::ivec3(0,0,0);
+    inline static glm::ivec3 CORNER_2 = glm::ivec3(0,0,0);
+
 };
 
 #endif // WORLDVARIABLES_HPP

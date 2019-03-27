@@ -8,11 +8,10 @@
 #include <glm/mat4x4.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <unordered_map>
+//#include <unordered_map>
 
 #include "worldvariables.hpp"
 #include "utility/Shader/shader.hpp"
-#include "utility/Voxagen/voxagenrenderer.hpp"
 
 
 class Mesh
@@ -38,7 +37,7 @@ private:
     GLuint _vertexCount = 0, _indexCount = 0;
     std::vector<GLfloat> _vertices;
     std::vector<GLuint> _indices;
-    std::unordered_map<std::string, uint> _vertexMap;
+    //std::unordered_map<std::string, uint> _vertexMap;
 
     int GetVertex(glm::vec3 p, GLfloat n, glm::vec3 col);
     std::string HashVertex(glm::vec3 p, GLfloat n, glm::vec3 col);

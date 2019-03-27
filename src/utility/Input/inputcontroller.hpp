@@ -5,7 +5,6 @@
 #include "utility/Camera/camera.hpp"
 #include "worldvariables.hpp"
 #include "glm/common.hpp"
-#include "utility/Voxagen/voxagenrenderer.hpp"
 
 class InputController
 {
@@ -18,13 +17,14 @@ private:
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
     static void MouseClickCallback(GLFWwindow* window, int button, int action, int mods);
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-
+    static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     //Variables
     static float lastX;
     static float lastY;
     static bool firstMouse;
     static bool free_mouse;
     static bool alt_pressed;
+    static bool key_down;
 };
 
 #endif // INPUTCONTROLLER_HPP

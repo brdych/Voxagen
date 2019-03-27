@@ -1,5 +1,7 @@
 #include "gui/guimanager.hpp"
 #include "utility/Voxagen/voxagenengine.hpp"
+#include "utility/Generation/worldgenerator.hpp"
+#include "utility/3P/ThreadPool-master/fillvtask.hpp"
 
 GuiManager::GuiManager(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
@@ -86,9 +88,29 @@ void GuiManager::drawEditPanel(bool *p_open)
         return;
     }
 
-    ImGui::Checkbox("Edit Mode", &WorldVariables::EDIT_MODE);
-    ImGui::Separator();
+    if(!WorldVariables::EDIT_MODE)
+    {
+        if(ImGui::Button("Enter Edit Mode"))
+        {
+            WorldVariables::EDIT_MODE = true;
+            WorldVariables::ENTERED_EDIT_MODE = true;
+        }
+    }
+    else
+    {
+        if(ImGui::Button("Exit Edit Mode"))
+        {
+            WorldVariables::EDIT_MODE = false;
+        }
+    }
+    ImGui::SliderInt("BlockType: ", &WorldVariables::SELECTED_BLOCK, 1, 9);
+    glm::vec3 c = WorldGenerator::BLOCK_TYPES.at(static_cast<unsigned char>(WorldVariables::SELECTED_BLOCK));
+    ImGui::ColorButton("Selected:", ImVec4(c.r,c.g,c.b,0.0f), false, ImVec2(100,100));
 
+    if(ImGui::Button("Save Data!"))
+    {
+        VoxagenEngine::CHUNK_MANAGER.SaveChunks();
+    }
     ImGui::End();
 }
 
@@ -99,24 +121,7 @@ void GuiManager::drawChunkIOPanel(bool *p_open)
         ImGui::End();
         return;
     }
-
-    if (ImGui::Button("Load Chunks From File")) {
-        VoxagenEngine::CHUNK_MANAGER.Reset();
-        WorldVariables::LOAD_CHUNKS_FROM_FILE = true;
-    }
-
-    if (ImGui::Button("Save Visible Chunks")) {
-        WorldVariables::FREEZE_RENDERLIST = true;
-        WorldVariables::SAVE_CHUNK_STORE = true;
-        WorldVariables::USE_GORP = false;
-    }
-
-    if (ImGui::Button("Gorp Visible Chunks")) {
-        WorldVariables::FREEZE_RENDERLIST = true;
-        WorldVariables::SAVE_CHUNK_STORE = true;
-        WorldVariables::USE_GORP = true;
-    }
-
+    ImGui::Checkbox("Use GORB", &VoxagenEngine::USE_GORB);
     ImGui::End();
 }
 
@@ -135,10 +140,11 @@ void GuiManager::drawWorldPanel(bool *p_open)
     ImGui::Separator();
     if (ImGui::Button("Update Light Position"))
     {
-        WorldVariables::LIGHT_POS = glm::vec3(VoxagenRenderer::CAMERA.Position);
-        WorldVariables::GLOBAL_LIGHT_DIR = glm::vec3(VoxagenRenderer::CAMERA.Front);
+        WorldVariables::LIGHT_POS = glm::vec3(VoxagenEngine::CAMERA.Position);
+        WorldVariables::GLOBAL_LIGHT_DIR = glm::vec3(VoxagenEngine::CAMERA.Front);
     }
-
+    ImGui::Checkbox("Gravity?", &WorldVariables::GRAVITY);
+    ImGui::Checkbox("Unforce Atmosphere", &WorldVariables::STOP_EFFECTS);
     ImGui::End();
 }
 
@@ -163,6 +169,8 @@ void GuiManager::drawCameraPanel(bool* p_open)
     glm::vec3 cPosInt = WorldVariables::CUR_POS_INT;
     glm::vec3 cChunk = WorldVariables::CUR_CHUNK;
     glm::vec3 cChunkPos = WorldVariables::CUR_POS_CHUNK;
+    glm::vec3 cChunkLookAt = WorldVariables::LOOKING_AT;
+
     if (!ImGui::Begin("Camera Info", p_open))
     {
         ImGui::End();
@@ -176,6 +184,19 @@ void GuiManager::drawCameraPanel(bool* p_open)
     ImGui::Separator();
     ImGui::Text("Chunk Pos: x:%.0f y:%.0f z:%.0f",cChunkPos.x,cChunkPos.y,cChunkPos.z);
     ImGui::Separator();
+    ImGui::Text("Looking At: x:%.0f y:%.0f z:%.0f",cChunkLookAt.x,cChunkLookAt.y,cChunkLookAt.z);
+    ImGui::Separator();
+
+    ImGui::Text("Edit Pos: x:%i y:%i z:%i", WorldVariables::EDIT_POS.x, WorldVariables::EDIT_POS.y, WorldVariables::EDIT_POS.z );
+    ImGui::Text("Edit Chunk: x:%i y:%i z:%i", WorldVariables::EDIT_CHUNK.x, WorldVariables::EDIT_CHUNK.y, WorldVariables::EDIT_CHUNK.z );
+    ImGui::Text("Edit Chunk Pos: x:%i y:%i z:%i", WorldVariables::EDIT_CHUNK_POS.x, WorldVariables::EDIT_CHUNK_POS.y, WorldVariables::EDIT_CHUNK_POS.z );
+    ImGui::Separator();
+
+    ImGui::Text("Direction: %i", WorldVariables::CARDINAL_DIRECTION);
+    ImGui::Text("Direction3f: x:%.3f y:%.3f z:%.3f", VoxagenEngine::CAMERA.Front.x, VoxagenEngine::CAMERA.Front.y, VoxagenEngine::CAMERA.Front.z );
+    ImGui::Text("Pitch:%.3f Yaw:%.3f",VoxagenEngine::CAMERA.Pitch, VoxagenEngine::CAMERA.Yaw);
+    ImGui::Separator();
+
     ImGui::End();
 }
 
@@ -244,16 +265,17 @@ void GuiManager::drawChunkPanel(bool* p_open)
     ImGui::Checkbox("Freeze",    &WorldVariables::FREEZE_RENDERLIST);
     ImGui::Separator();
 
-    ImGui::Text("Threads: %i", VoxagenEngine::CHUNK_MANAGER.CurrentThreads);
+    ImGui::SliderFloat("Culling Angle", &WorldVariables::CULL_VALUE,0.0f,0.9f);
     ImGui::Separator();
 
-    ImGui::Text("View Distance");
-    ImGui::SliderInt("", &view_distance,2,20);
+    ImGui::SliderInt("View Distance", &view_distance,2,20);
     if(ImGui::Button("Update View Distance"))
     {
         WorldVariables::VIEW_DISTANCE = view_distance;
         VoxagenEngine::CHUNK_MANAGER.Reset();
     }
+    ImGui::Separator();
+    ImGui::Checkbox("Debug Lists", &VoxagenEngine::DEBUG_LIST);
     ImGui::End();
 }
 

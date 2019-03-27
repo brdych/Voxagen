@@ -2,6 +2,7 @@
 #define WORLDGENERATOR_HPP
 
 #include "utility/Chunk/chunk.hpp"
+#include <unordered_map>
 
 class WorldGenerator
 {

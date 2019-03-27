@@ -1,18 +1,6 @@
 #include "chunkgenerator.hpp"
+#include "utility/3P/ThreadPool-master/genvtask.hpp"
 #include "utility/Voxagen/voxagenengine.hpp"
-
-void GenChunk(Chunk* c, WorldGenerator* generator)
-{
-    if(WorldVariables::LOAD_CHUNKS_FROM_FILE)
-    {
-        VoxagenEngine::FILE_IO->LoadChunk(c);
-        c->isGenerated = true;
-    }
-    else
-    {
-        generator->GenerateChunk(c);
-    }
-}
 
 ChunkGenerator::ChunkGenerator(WorldGenerator* generator)
 {
@@ -26,6 +14,5 @@ ChunkGenerator::~ChunkGenerator()
 
 void ChunkGenerator::GenerateChunk(Chunk* c)
 {
-    std::thread t(GenChunk, c, generator);
-    t.detach();
+    VoxagenEngine::POOL->enqueue(new GenVTask(c, generator));
 }
